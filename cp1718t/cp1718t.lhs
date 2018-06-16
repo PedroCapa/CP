@@ -660,7 +660,7 @@ g 0 = 1
 g (d+1) = underbrace ((d+1)) (s d) * g d
 
 s 0 = 1
-s (d+1) = s n + 1
+s (d+1) = s d + 1
 \end{spec}
 A partir daqui alguém derivou a seguinte implementação:
 \begin{code}
@@ -673,7 +673,7 @@ derive as funções |base k| e |loop| que são usadas como auxiliares acima.
 \begin{propriedade}
 Verificação que |bin n k| coincide com a sua especificação (\ref{eq:bin}):
 \begin{code}
-prop3 n k = (bin n k) == (fac n) % (fac k * (fac ((n-k))))
+prop3 (NonNegative n) (NonNegative k) = k <= n ==> (bin n k) == (fac n) % (fac k * (fac ((n-k))))
 \end{code}
 \end{propriedade}
 
@@ -974,16 +974,17 @@ outras funções auxiliares que sejam necessárias.
 \subsection*{Problema 1}
 
 \begin{code}
-inBlockchain = undefined
-outBlockchain = undefined
-recBlockchain = undefined    
-cataBlockchain = undefined     
-anaBlockchain = undefined
-hyloBlockchain = undefined
+inBlockchain = either Bc Bcs
+outBlockchain (Bc x) = i1 x
+outBlockchain (Bcs x) = i2 x
+recBlockchain f = id -|- id >< f
+cataBlockchain f = f . (recBlockchain (cataBlockchain f)) . outBlockchain
+anaBlockchain f = inBlockchain . (recBlockchain (anaBlockchain f)) . f
+hyloBlockchain f g = cataBlockchain f . anaBlockchain g
 
-allTransactions = undefined
-ledger = undefined
-isValidMagicNr = undefined
+allTransactions b = cataBlockchain trans b
+ledger b = cataBlockchain entityValue b 
+isValidMagicNr b = p2 (cataList verifica (cataBlockchain block2List b))
 \end{code}
 
 
@@ -1000,7 +1001,7 @@ anaQTree f = inQTree . (recQTree (anaQTree f) ) . f
 hyloQTree g h = cataQTree g . anaQTree h
 
 instance Functor QTree where
-    fmap f = cataQTree (inQTree . baseQTree f id )
+    fmap f = cataQTree (inQTree . baseQTree f id)
 
 rotateQTree q = cataQTree rotate90 q
 scaleQTree i q = cataQTree (amplia i) q 
@@ -1012,18 +1013,14 @@ outlineQTree = undefined
 \subsection*{Problema 3}
 
 \begin{code}
-base = undefined--split (split (const 1) (succ)) (split (const 1) (const 1))
-loop = undefined--split (split (mul) (succ . p1)) (split (mul) (succ . p2))
-
-loopTuplo :: (Integer, Integer) -> ((Integer, Integer), (Integer, Integer))
-loopTuplo = split (split (mul) (succ . p1)) (split (mul) (succ . p2))
-
-baseTuplo :: Integer -> ((Integer, Integer), (Integer, Integer))
-baseTuplo = split (split (const 1) (succ)) (split (const 1) (const 1))
+base = convtuplo . (split (split (const 1) (succ)) (split (const 1) (const 1)))
+loop = convtuplo . (split (split (mul . p1) (succ . p2 . p1)) (split (mul . p2) (succ . p2 . p2))) . invConvTuplo
 
 convtuplo :: ((Integer, Integer),(Integer, Integer)) -> (Integer, Integer, Integer, Integer)
-convtuplo ((x, y),(w, z)) = (x, y, w, z) 
+convtuplo ((x, y),(w, z)) = (x, y, w, z)
 
+invConvTuplo :: (Integer, Integer, Integer, Integer) -> ((Integer, Integer),(Integer, Integer))
+invConvTuplo (x, y, w, z) = ((x, y),(w, z))
 \end{code}
 
 \subsection*{Problema 4}
@@ -1221,15 +1218,41 @@ bs2 = Bcs (bl3, Bcs (bl2, Bc bl2))
 bs3 = Bc bl2
 bs4 = Bcs (bl1, Bc bl3)
 
+------------
+trans :: Either Block (Block, Transactions) -> Transactions
+trans (Left (a, (b, c))) = c
+trans (Right ((a, (b, c)), x)) = conc (c, x)
+------------
+entityValue :: Either Block (Block, Ledger) -> Ledger
+entityValue (Left (a, (b, c))) = entityLadger c
+entityValue (Right ((a, (b, c)), x)) = colocaLedger (entityLadger c, x)
 
+entityLadger :: Transactions -> Ledger
+entityLadger [] = []
+entityLadger ((e, (v, en)) : t) = [(e, v)] ++ [(en , v)] ++ entityLadger t
+
+colocaLedger :: (Ledger, Ledger) -> Ledger
+colocaLedger ([], l) = l
+colocaLedger ((h:t), l) = colocaNodo h (colocaLedger (t, l))
+              
+colocaNodo :: (Entity, Value) -> Ledger -> Ledger
+colocaNodo n [] = singl n
+colocaNodo (x, y) ((a, b):t) = if(x == a) then ((a, b + y):t) else (a, b) : colocaNodo (x, y) t
+-------------------
+block2List :: Either Block (Block, [MagicNo]) -> [MagicNo]
+block2List (Left (a, (b, c))) = singl a
+block2List (Right ((a, (b, c)), d)) = cons (a, d)
+
+verifica :: Either () (MagicNo, ([MagicNo], Bool)) -> ([MagicNo], Bool)
+verifica (Left ()) = ([], True)
+verifica (Right (val, (l, b))) = (cons (val, l) ,(not (elem val l)) && b)
+---------------
 reverseChain :: Blockchain -> Blockchain
 reverseChain = cataBlockchain (either Bc snocChain)
-
 
 snocChain :: (Block, Blockchain) -> Blockchain
 snocChain (b, Bc b') = Bcs (b', Bc b)
 snocChain (b, Bcs (b', bs)) = Bcs (b', snocChain (b, bs))
-
 
 concChain :: (Blockchain, Blockchain) -> Blockchain
 concChain (b1, (Bc b)) = snocChain (b, b1)
@@ -1254,7 +1277,6 @@ hyloQTree :: (Either (b, (Int, Int)) (c, (c, (c, c))) -> c) -> (a -> Either (b, 
 rotate90 :: Either (a, (Int, Int)) (QTree a, (QTree a, (QTree a, QTree a))) -> QTree a
 rotate90 (Left (n, (x, y))) = Cell n y x
 rotate90 (Right (a, (b, (c, d)))) = Block c a d b
---rotate90 = either (uncurryCell Cell) (uncurryBlock Block)
 
 altura :: QTree a -> Int
 altura (Cell n x y) = 0
@@ -1348,7 +1370,7 @@ invertBMP from to = withBMP from to invertbm
 
 depthQTree :: QTree a -> Int
 depthQTree = cataQTree (either (const 0) f)
-    where f (a,(b,(c,d))) = maximum [a,b,c,d]
+    where f (a,(b,(c,d))) = 1 + maximum [a,b,c,d]
 
 compressbm :: Eq a => Int -> Matrix a -> Matrix a
 compressbm n = qt2bm . compressQTree n . bm2qt
@@ -1424,4 +1446,3 @@ isBalancedFTree = isJust . cataFTree (either (const (Just 0)) g)
 %----------------- Fim do documento -------------------------------------------%
 
 \end{document}
-
