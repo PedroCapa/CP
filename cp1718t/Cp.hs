@@ -206,35 +206,8 @@ nothing = const Nothing
 
 false = const False
 
-
-
----------------------------------------------------
----------------------------------------------------
----------------------------------------------------
-uncurryCell :: (a -> b -> c -> d) -> (a, (b, c)) -> d
-uncurryCell a (b, (c, d)) = a b c d
-
-curryCell :: ((a, (b, c)) -> d) -> a -> b -> c -> d
-curryCell d a b c = d (a,(b, c)) 
-
-uncurryBlock :: (a -> b -> c -> d -> e) -> (a, (b, (c, d))) -> e
-uncurryBlock a (b, (c, (d, e))) = a b c d e 
-
-curryBlock :: ((a, (b, (c, d))) -> e) -> a -> b -> c -> d -> e
-curryBlock e a b c d = e (a, (b, (c, d)))
-
 inMaybe :: Either () a -> Maybe a
 inMaybe = either (const Nothing) Just
-
-baseQTreefst :: (a1 -> b) -> (a1, d2) -> (b, d2)
-baseQTreefst g (a1, d2) = (g a1, d2)
-
-uncurryComp :: (a -> b -> c -> d) -> (a, (b, c)) -> d
-uncurryComp f (x, (y, z)) = f x y z
-
-curryComp :: ((a, (b, c)) -> d) -> a -> b -> c -> d
-curryComp f x y z = f (x, (y, z))
-
 -- (9) Advanced ----------------------------------------------------------------
 
 class (Functor f) => Unzipable f where

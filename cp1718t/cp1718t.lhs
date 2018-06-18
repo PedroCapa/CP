@@ -1006,7 +1006,7 @@ instance Functor QTree where
 rotateQTree q = cataQTree rotate90 q
 scaleQTree i q = cataQTree (amplia i) q 
 invertQTree q = bm2qt(inverte (qt2bm q))
-compressQTree = undefined --comprime q (altura q) c
+compressQTree c q = anaQTree comprimeAna ((depthQTree q) - c, q)
 outlineQTree = undefined
 \end{code}
 
@@ -1228,8 +1228,11 @@ entityValue (Left (a, (b, c))) = entityLadger c
 entityValue (Right ((a, (b, c)), x)) = colocaLedger (entityLadger c, x)
 
 entityLadger :: Transactions -> Ledger
-entityLadger [] = []
-entityLadger ((e, (v, en)) : t) = [(e, v)] ++ [(en , v)] ++ entityLadger t
+entityLadger l = cataList insereLedger l
+
+insereLedger :: Either () (Transaction, Ledger) -> Ledger
+insereLedger (Left ()) = []
+insereLedger (Right ((e, (v, en)), t)) = cons ((en, v), cons ((e, v), t))
 
 colocaLedger :: (Ledger, Ledger) -> Ledger
 colocaLedger ([], l) = l
@@ -1237,7 +1240,7 @@ colocaLedger ((h:t), l) = colocaNodo h (colocaLedger (t, l))
               
 colocaNodo :: (Entity, Value) -> Ledger -> Ledger
 colocaNodo n [] = singl n
-colocaNodo (x, y) ((a, b):t) = if(x == a) then ((a, b + y):t) else (a, b) : colocaNodo (x, y) t
+colocaNodo (x, y) ((a, b):t) = if(x == a) then cons ((a, b + y), t) else cons ((a, b), colocaNodo (x, y) t)
 -------------------
 block2List :: Either Block (Block, [MagicNo]) -> [MagicNo]
 block2List (Left (a, (b, c))) = singl a
@@ -1273,49 +1276,50 @@ recQTree :: (a -> d1) -> Either (b, d2) (a, (a, (a, a))) -> Either (b, d2) (d1, 
 cataQTree :: (Either (b, (Int, Int)) (d, (d, (d, d))) -> d) -> QTree b -> d
 anaQTree :: (a1 -> Either (a2, (Int, Int)) (a1, (a1, (a1, a1)))) -> a1 -> QTree a2
 hyloQTree :: (Either (b, (Int, Int)) (c, (c, (c, c))) -> c) -> (a -> Either (b, (Int, Int)) (a, (a, (a, a)))) -> a -> c
-
+------------------------
 rotate90 :: Either (a, (Int, Int)) (QTree a, (QTree a, (QTree a, QTree a))) -> QTree a
 rotate90 (Left (n, (x, y))) = Cell n y x
 rotate90 (Right (a, (b, (c, d)))) = Block c a d b
-
-altura :: QTree a -> Int
-altura (Cell n x y) = 0
-altura (Block a b c d) = 1 + maximum (altura a, maximum (altura b, maximum (altura c, altura d)))
-
-comprime ::  QTree a -> Int -> Int -> QTree a
-comprime (Cell n x y) alt comp = Cell n x y
-comprime (Block a b c d) alt comp = if(alt == comp)
-                                    then block2Cell (Block a b c d)
-                                    else Block (comprime a (alt - 1) comp) (comprime b (alt - 1) comp)
-                                          (comprime c (alt - 1) comp) (comprime d (alt - 1) comp)
-
-block2Cell :: QTree a -> QTree a
-block2Cell (Cell n x y) = Cell n x y
-block2Cell (Block a b c d) = calcula (block2Cell a) (block2Cell b) (block2Cell c) (block2Cell d)
-
-calcula :: QTree a -> QTree a -> QTree a -> QTree a -> QTree a
-calcula (Cell a b c) (Cell d e f) (Cell g h i) (Cell j k l) = Cell (maiorUsado (maisUsado (a, b * c) (maisUsado (d, e * f) 
-                                                              (maisUsado (g, h * i) (maisUsado (j, k * l) (a, 0)))))) (b + h) (f + l)
-
-maiorUsado :: (a, Int) -> a
-maiorUsado (a, _) = a
-
-maisUsado :: (a, Int) -> (a, Int) -> (a, Int)
-maisUsado (a, x) (b, y) = if(x > y)
-                          then (a, x)
-                          else (b, y)
-
+------------------
 amplia :: Int -> Either (a, (Int, Int)) (QTree a, (QTree a, (QTree a, QTree a))) -> QTree a
 amplia i (Left (n, (x, y))) = (Cell n (x * i) (y * i)) 
 amplia i (Right (a, (b, (c, d)))) = (Block a b c d)
-
+-------------------
 inverte :: Matrix PixelRGBA8 -> Matrix PixelRGBA8
 inverte m = (fromList (nrows m) (ncols m) (cataList (inverteLista) (toList m)))
 
 inverteLista :: Either () (PixelRGBA8, [PixelRGBA8]) -> [PixelRGBA8]
 inverteLista (Left nil) = []
 inverteLista (Right (PixelRGBA8 r g b a, xs)) = PixelRGBA8 (255 - r) (255 - g) (255 - b) a : xs
+----------------
+comprimeAna :: (Int, QTree a) -> Either (a, (Int, Int)) ((Int, QTree a), ((Int, QTree a), ((Int, QTree a), (Int, QTree a))))
+comprimeAna (_, (Cell n x y)) = i1 ((n, (x, y)))
+comprimeAna (0, (Block a b c d)) = i1 (block2CellAna (Block a b c d))
+comprimeAna (alt, (Block a b c d)) = i2 ((n, a), ((n, b), ((n, c), ((n, d)))))
+          where n = pred alt
 
+block2CellAna :: QTree a -> (a, (Int, Int))
+block2CellAna (Cell n x y) = (n, (x, y))
+block2CellAna (Block a b c d) = calculaAna (block2CellAna a) (block2CellAna b) (block2CellAna c) (block2CellAna d)
+
+calculaAna :: (a, (Int, Int)) -> (a, (Int, Int)) -> (a, (Int, Int)) -> (a, (Int, Int)) -> (a, (Int, Int))
+calculaAna (a, (b, c)) (_, (d, _)) (_, (_, e)) _ = (a, (b + d, c + e))
+----------------
+uncurryCell :: (a -> b -> c -> d) -> (a, (b, c)) -> d
+uncurryCell a (b, (c, d)) = a b c d
+
+curryCell :: ((a, (b, c)) -> d) -> a -> b -> c -> d
+curryCell d a b c = d (a,(b, c)) 
+
+uncurryBlock :: (a -> b -> c -> d -> e) -> (a, (b, (c, d))) -> e
+uncurryBlock a (b, (c, (d, e))) = a b c d e 
+
+curryBlock :: ((a, (b, (c, d))) -> e) -> a -> b -> c -> d -> e
+curryBlock e a b c d = e (a, (b, (c, d)))
+
+baseQTreefst :: (a1 -> b) -> (a1, d2) -> (b, d2)
+baseQTreefst g (a1, d2) = (g a1, d2)
+------------
 instance (Eq a,Arbitrary a) => Arbitrary (QTree a) where
   arbitrary = do
     rows <- QuickCheck.choose (1,100)
@@ -1434,7 +1438,17 @@ hyloFTree :: (Either b1 (b2, (c, c)) -> c) -> (a -> Either b1 (b2, (a, a))) -> a
 depthFTree :: FTree a b -> Int
 depthFTree = cataFTree (either (const 0) g)
     where g (a,(l,r)) = max l r + 1
-    
+
+constroi :: Square -> Square -> (FTree Square Square)
+constroi 0 x = Unit 0
+constroi i x = Comp i (constroi (i - 1) ((sqrt(2)/2) * x)) (constroi (i - 1) ((sqrt(2)/2) * x))
+------------
+uncurryComp :: (a -> b -> c -> d) -> (a, (b, c)) -> d
+uncurryComp f (x, (y, z)) = f x y z
+
+curryComp :: ((a, (b, c)) -> d) -> a -> b -> c -> d
+curryComp f x y z = f (x, (y, z))
+-----
 isBalancedFTree :: FTree a b -> Bool
 isBalancedFTree = isJust . cataFTree (either (const (Just 0)) g)
     where
