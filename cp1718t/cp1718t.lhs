@@ -1038,16 +1038,27 @@ hyloFTree f g = cataFTree f . anaFTree g
 instance Bifunctor FTree where
     bimap f g = cataFTree (inFTree . baseFTree f g id)
 
-generatePTree = undefined
+generatePTree i = anaFTree constroiAna (i, 2.0)
 drawPTree = undefined
 \end{code}
 
 \subsection*{Problema 5}
 
 \begin{code}
-singletonbag = undefined
+singletonbag = B . singl . split (id) (const 1)
 muB = undefined
-dist = undefined
+dist b = prob b (nBags b)
+
+prob :: Bag a -> Int -> Dist a
+prob (B t) i = D (intToProb t i)
+
+intToProb :: [(a, Int)] -> Int -> [(a, ProbRep)]
+intToProb [] _ = []
+intToProb ((a, n) : t) i = cons ((a, (fromIntegral n) / (fromIntegral i)), intToProb t i)
+
+nBags :: Bag a -> Int
+nBags (B []) = 0
+nBags (B ((a, i) : t)) = i + nBags (B t)
 \end{code}
 
 \section{Como exprimir cálculos e diagramas em LaTeX/lhs2tex}
@@ -1439,9 +1450,10 @@ depthFTree :: FTree a b -> Int
 depthFTree = cataFTree (either (const 0) g)
     where g (a,(l,r)) = max l r + 1
 
-constroi :: Square -> Square -> (FTree Square Square)
-constroi 0 x = Unit 0
-constroi i x = Comp i (constroi (i - 1) ((sqrt(2)/2) * x)) (constroi (i - 1) ((sqrt(2)/2) * x))
+constroiAna :: (Int, Square) -> Either Square (Square, ((Int, Square), (Int, Square)))
+constroiAna (0, x) = i1 (x)
+constroiAna (i, x) = i2 (x, ((ant, (sqrt(2) / 2) * x), (ant, (sqrt(2) / 2) * x)))
+          where ant = pred i
 ------------
 uncurryComp :: (a -> b -> c -> d) -> (a, (b, c)) -> d
 uncurryComp f (x, (y, z)) = f x y z
