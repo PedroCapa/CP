@@ -1007,7 +1007,7 @@ rotateQTree q = cataQTree rotate90 q
 scaleQTree i q = cataQTree (amplia i) q 
 invertQTree q = bm2qt(inverte (qt2bm q))
 compressQTree c q = anaQTree comprimeAna ((depthQTree q) - c, q)
-outlineQTree = undefined
+outlineQTree f q = qt2bm (fmap f q)
 \end{code}
 
 \subsection*{Problema 3}
