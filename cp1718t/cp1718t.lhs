@@ -1046,8 +1046,14 @@ drawPTree = undefined
 
 \begin{code}
 singletonbag = B . singl . split (id) (const 1)
-muB = undefined
+muB = B  . bagValor . (fmap unB)
 dist b = prob b (nBags b)
+
+bagValor :: Bag [(a, Int)] -> [(a, Int)]
+bagValor = concat . (map novoValor) . unB
+
+novoValor :: ([(a, Int)], Int) -> [(a, Int)]
+novoValor (x, y) = map (id >< (*y)) x
 
 prob :: Bag a -> Int -> Dist a
 prob (B t) i = D (intToProb t i)
