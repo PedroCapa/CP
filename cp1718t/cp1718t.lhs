@@ -1216,25 +1216,6 @@ generatePTree i = anaFTree constroiAna (i, 2.0)
 drawPTree = undefined
 \end{code}
 
-\begin{eqnarray*}
-\xymatrix@@C=2cm{
-  |Nat0 >< Square|
-      \ar[u]_-{|constroiAna|}
-      \ar[r]_-{|out >< id|}
-&
-  |1 + Nat0 >< Nat0|
-      \ar[r]_-{|constroiAna|}
-&
-  |Square + Square >< (Nat0 >< Square)
-      \ar[llu]^-{|id + id >< constroiAna}
-\\
-  |PTree|
-&
-  |Square + Square >< (PTree >< PTree)|
-      \ar[l]_-{|inFTree|}
-}
-\end{eqnarray*}
-
 \subsubsection*{Auxiliares}
 \begin{code}
 constroiAna :: (Int, Square) -> Either Square (Square, ((Int, Square), (Int, Square)))
