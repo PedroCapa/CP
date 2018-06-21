@@ -105,13 +105,13 @@
 
 \begin{center}\large
 \begin{tabular}{ll}
-\textbf{Grupo} nr. & 99 (preencher)
+\textbf{Grupo} nr. & 54 (preencher)
 \\\hline
-a11111 & Nome1 (preencher)	
+a81960 & Luís Filipe da Costa Capa
 \\
 a22222 & Nome2 (preencher)	
 \\
-a33333 & Nome3 (preencher)	
+a83170 & Pedro Miguel da Costa Capa
 \end{tabular}
 \end{center}
 
@@ -987,6 +987,39 @@ ledger b = cataBlockchain entityValue b
 isValidMagicNr b = p2 (cataList verifica (cataBlockchain block2List b))
 \end{code}
 
+\begin{code}
+trans :: Either Block (Block, Transactions) -> Transactions
+trans (Left (a, (b, c))) = c
+trans (Right ((a, (b, c)), x)) = conc (c, x)
+
+entityValue :: Either Block (Block, Ledger) -> Ledger
+entityValue (Left (a, (b, c))) = entityLadger c
+entityValue (Right ((a, (b, c)), x)) = colocaLedger (entityLadger c, x)
+
+entityLadger :: Transactions -> Ledger
+entityLadger l = cataList insereLedger l
+
+insereLedger :: Either () (Transaction, Ledger) -> Ledger
+insereLedger (Left ()) = []
+insereLedger (Right ((e, (v, en)), t)) = cons ((en, v), cons ((e, v), t))
+
+colocaLedger :: (Ledger, Ledger) -> Ledger
+colocaLedger ([], l) = l
+colocaLedger ((h:t), l) = colocaNodo h (colocaLedger (t, l))
+              
+colocaNodo :: (Entity, Value) -> Ledger -> Ledger
+colocaNodo n [] = singl n
+colocaNodo (x, y) ((a, b):t) = if(x == a) then cons ((a, b + y), t) else cons ((a, b), colocaNodo (x, y) t)
+
+block2List :: Either Block (Block, [MagicNo]) -> [MagicNo]
+block2List (Left (a, (b, c))) = singl a
+block2List (Right ((a, (b, c)), d)) = cons (a, d)
+
+verifica :: Either () (MagicNo, ([MagicNo], Bool)) -> ([MagicNo], Bool)
+verifica (Left ()) = ([], True)
+verifica (Right (val, (l, b))) = (cons (val, l) ,(not (elem val l)) && b)
+\end{code}
+
 
 \subsection*{Problema 2}
 
@@ -1010,12 +1043,153 @@ compressQTree c q = anaQTree comprimeAna ((depthQTree q) - c, q)
 outlineQTree f q = qt2bm (fmap f q)
 \end{code}
 
+\begin{code}
+rotate90 :: Either (a, (Int, Int)) (QTree a, (QTree a, (QTree a, QTree a))) -> QTree a
+rotate90 (Left (n, (x, y))) = Cell n y x
+rotate90 (Right (a, (b, (c, d)))) = Block c a d b
+
+
+amplia :: Int -> Either (a, (Int, Int)) (QTree a, (QTree a, (QTree a, QTree a))) -> QTree a
+amplia i (Left (n, (x, y))) = (Cell n (x * i) (y * i)) 
+amplia i (Right (a, (b, (c, d)))) = (Block a b c d)
+
+
+inverte :: Matrix PixelRGBA8 -> Matrix PixelRGBA8
+inverte m = (fromList (nrows m) (ncols m) (cataList (inverteLista) (toList m)))
+
+inverteLista :: Either () (PixelRGBA8, [PixelRGBA8]) -> [PixelRGBA8]
+inverteLista (Left nil) = []
+inverteLista (Right (PixelRGBA8 r g b a, xs)) = PixelRGBA8 (255 - r) (255 - g) (255 - b) a : xs
+
+
+comprimeAna :: (Int, QTree a) -> Either (a, (Int, Int)) ((Int, QTree a), ((Int, QTree a), ((Int, QTree a), (Int, QTree a))))
+comprimeAna (_, (Cell n x y)) = i1 ((n, (x, y)))
+comprimeAna (0, (Block a b c d)) = i1 (block2CellAna (Block a b c d))
+comprimeAna (alt, (Block a b c d)) = i2 ((n, a), ((n, b), ((n, c), ((n, d)))))
+          where n = pred alt
+
+block2CellAna :: QTree a -> (a, (Int, Int))
+block2CellAna (Cell n x y) = (n, (x, y))
+block2CellAna (Block a b c d) = calculaAna (block2CellAna a) (block2CellAna b) (block2CellAna c) (block2CellAna d)
+
+calculaAna :: (a, (Int, Int)) -> (a, (Int, Int)) -> (a, (Int, Int)) -> (a, (Int, Int)) -> (a, (Int, Int))
+calculaAna (a, (b, c)) (_, (d, _)) (_, (_, e)) _ = (a, (b + d, c + e))
+
+
+uncurryCell :: (a -> b -> c -> d) -> (a, (b, c)) -> d
+uncurryCell a (b, (c, d)) = a b c d
+
+curryCell :: ((a, (b, c)) -> d) -> a -> b -> c -> d
+curryCell d a b c = d (a,(b, c)) 
+
+uncurryBlock :: (a -> b -> c -> d -> e) -> (a, (b, (c, d))) -> e
+uncurryBlock a (b, (c, (d, e))) = a b c d e 
+
+curryBlock :: ((a, (b, (c, d))) -> e) -> a -> b -> c -> d -> e
+curryBlock e a b c d = e (a, (b, (c, d)))
+
+baseQTreefst :: (a1 -> b) -> (a1, d2) -> (b, d2)
+baseQTreefst g (a1, d2) = (g a1, d2)
+\end{code}
+
 \subsection*{Problema 3}
 
 \begin{code}
 base = convtuplo . (split (split (const 1) (succ)) (split (const 1) (const 1)))
 loop = convtuplo . (split (split (mul . p1) (succ . p2 . p1)) (split (mul . p2) (succ . p2 . p2))) . invConvTuplo
+\end{code}
 
+\subsubsection*{Derivação da Funções}
+\begin{eqnarray*}
+\start
+  |lcbr
+  (f k 0 = 1)
+  (f k (n + 1) = l k n * f k d)|
+\just\equiv{ Eq+, Igualdade Extensional}
+  |either (f k . (const 0)) (f k . succ) = either (const 1) (mul . split (f k) (l k))|
+\just\equiv{ Fusão, Absorção}
+  |f k . inNat = either (const 1) (mul) . (id + split (f k) (l k))|
+\just\equiv{F f = id + f}
+  |f k . inNat = either (const 1) (mul) . F (split (f k) (l k))|
+\qed
+
+\start
+  |lcbr(l k 0 = succ k)
+  (l k (n + 1) = l k n + 1)|
+\just\equiv{ Eq+, Igualdade Extensional}
+  |either (l k . (const 0)) (l k . succ) = either (succ) (succ . l k)|
+\just\equiv{ Fusão, Absorção, Cancelamento}
+  |l k . inNat = either (succ) (succ . p2) . (id + split (f k) (l k))|
+\just\equiv{F f = id + f}
+  |l k . inNat = either (succ) (suc . p2) . F (split (f k) (l k))|
+\qed
+
+\start
+  |lcbr
+  (g 0 = 1)
+  (g (n + 1) = s (n + 1) * g n)|
+\just\equiv{Eq+, Igualdade Extensional}
+  |either (g . (const 0)) (g . succ) = either (const 1) (mul . split g s)|
+\just\equiv{ Fusão, Absorção}
+  |g . inNat = either (const 1) (mul) . (id + split g s)|
+\just\equiv{F f = id + f}
+  |g . inNat = either (const 1) (mul) . F (split g s)|
+\qed
+
+\start
+  |lcbr
+  (s 0 = 1)
+  (s (n + 1) = s n + 1)|
+\just\equiv{Eq+, Igualdade Extensional}
+  |either (s . (const 0)) (s . succ) = either (const 1) (succ . s)|
+\just\equiv{ Fusão, Absorção, Cancelamento}
+  |s . inNat = either (const 1) (succ . p2) . (id + split g s)|
+\just\equiv{F f = id + f}
+  |s . inNat = either (const 1) (succ . p2) . F (split g s)|
+\qed
+
+\start
+  |lcbr 
+  (split (f k) (l k) = cataNat (split (either succ (succ . p2)) (either (const 1) mul)))
+  (split g s = cataNat (split (either (const 1) (succ . p2)) (either (const 1) mul)))|
+\just\equiv{fokkinga}
+  |h k = split 
+  (cataNat (split (either succ (succ . p2)) (either (const 1) mul))) 
+  (cataNat (split (either (const 1) (succ . p2)) (either (const 1) mul)))|
+\just\equiv{banana-split}
+  |h k = cataNat 
+  (split (either succ (succ . p2)) (either (const 1) mul) >< 
+  split (either (const 1) (succ . p2)) (either (const 1) mul) . 
+  split (F p1) (F p2))|
+\just\equiv{h k = for loop base, for f i = cataNat either (const i) f}
+  |cataNat (either base loop) = cataNat 
+  (split (either succ (succ . p2)) (either (const 1) mul) >< 
+  split (either (const 1) (succ . p2)) (either (const 1) mul) . 
+  split (F p1) (F p2))|
+\just\equiv{cataNat f = cataNat g <=> f = g}
+  |either base loop = split (either succ (succ . p2)) (either (const 1) mul) >< 
+  split (either (const 1) (succ . p2)) (either (const 1) mul) . 
+  split (F p1) (F p2)|
+\just\equiv{Absorção}
+  |either base loop = split 
+  (split (either succ (succ . p2)) (either (const 1) mul) . F p1)
+  (split (either (const 1) (succ . p2)) (either (const 1) mul) . F p2)|
+\just\equiv{Lei da Troca}
+  |either base loop = split 
+  (either (split succ (const 1)) ((split (succ . p2) mul) . p1)) 
+  (either (split (const 1) (const 1)) ((split (succ . p2) mul) . p2))|
+\just\equiv{Lei da Troca}
+  |either base loop = either
+  (split (split (succ) (const 1)) (split (const 1) (const 1)))
+  (split ((split (succ . p1) mul) . p1) ((split (succ . p1) mul) . p2))|
+\just\equiv{Eq+}
+  |lcbr
+  (base = split (split succ (const 1)) (split (const 1) (const 1)))
+  (loop = split ((split (succ . p1) mul) . p1) ((split (succ . p1) mul) . p2))|
+\end{eqnarray*}
+
+\subsubsection*{Auxiliares}
+\begin{code}
 convtuplo :: ((Integer, Integer),(Integer, Integer)) -> (Integer, Integer, Integer, Integer)
 convtuplo ((x, y),(w, z)) = (x, y, w, z)
 
@@ -1042,13 +1216,106 @@ generatePTree i = anaFTree constroiAna (i, 2.0)
 drawPTree = undefined
 \end{code}
 
+\begin{eqnarray*}
+\xymatrix@@C=2cm{
+  |Nat0 >< Square|
+      \ar[u]_-{|constroiAna|}
+      \ar[r]_-{|out >< id|}
+&
+  |1 + Nat0 >< Nat0|
+      \ar[r]_-{|constroiAna|}
+&
+  |Square + Square >< (Nat0 >< Square)
+      \ar[llu]^-{|id + id >< constroiAna}
+\\
+  |PTree|
+&
+  |Square + Square >< (PTree >< PTree)|
+      \ar[l]_-{|inFTree|}
+}
+\end{eqnarray*}
+
+\subsubsection*{Auxiliares}
+\begin{code}
+constroiAna :: (Int, Square) -> Either Square (Square, ((Int, Square), (Int, Square)))
+constroiAna (0, x) = i1 (x)
+constroiAna (i, x) = i2 (x, ((ant, (sqrt(2) / 2) * x), (ant, (sqrt(2) / 2) * x)))
+          where ant = pred i
+
+
+uncurryComp :: (a -> b -> c -> d) -> (a, (b, c)) -> d
+uncurryComp f (x, (y, z)) = f x y z
+
+curryComp :: ((a, (b, c)) -> d) -> a -> b -> c -> d
+curryComp f x y z = f (x, (y, z))
+\end{code}
+
 \subsection*{Problema 5}
 
+\subsubsection*{muB}
+A função muB, transforma um Bag (Bag a) num só Bag a.
+Para começar é percorrida a lista de bags e é aplicada a cada uma a função unB, que retira o bag de cada elemento.
+Depois, é aplicado a todos os elementos do Bag a função bag valor, que transforma o bag numa lista de tuplos.
+Por fim, é aplicada a função B que soma os elementos do mesmo tipo e transforma a lista de tuplos num bag.
+\begin{eqnarray*}
+\xymatrix@@C=2cm{
+    |Bag (Bag a)|
+            \ar[d]_-{|muB|}
+            \ar[r]_-{|fmap unB|}
+&
+    |Bag ([(a, Int)])|
+            \ar[d]^{|bagValor|}
+\\
+    |Bag a|
+&
+  |[(a, Int)]|
+            \ar[l]^-{|B|}
+}
+\end{eqnarray*}
+\begin{code}
+muB = B  . bagValor . (fmap unB)
+\end{code}
+
+\subsubsection*{singletonbag}
+A função singletonbag é o monade unidade do tipo Bag.
+O argumento é, primeiramente, aplicado a um split, que transforma o argumento num tuplo.
+Em seguida, é usada a função singl para converter o tuplo numa lista e por fim é usado o B.
+\begin{eqnarray*}
+\xymatrix@@C=2cm{
+  |a|
+      \ar[d]_-{|singletonbag|}
+      \ar[r]_-{|split id (const 1)|}
+&
+  |(a, Int)|
+      \ar[d]^{|singl|}
+\\
+  |Bag a|
+&
+  |[(a, Int)]|
+      \ar[l]^-{|B|}
+}
+\end{eqnarray*}
 \begin{code}
 singletonbag = B . singl . split (id) (const 1)
-muB = B  . bagValor . (fmap unB)
-dist b = prob b (nBags b)
+\end{code}
 
+\subsubsection*{dist}
+A função dist recebe como argumento um Bag a e origina um Dist a.
+Esta função transforma uma lista de tuplos, (a, Int), numa lista de (a, ProbRep), que indica a probablidade de tirar o elemento a.
+\begin{eqnarray*}
+\xymatrix@@C=2cm{
+  |Bag a|
+    \ar[r]_-{dist}
+&
+  |Dist a|
+}
+\end{eqnarray*}
+\begin{code}
+dist b = prob b (nBags b)
+\end{code}
+
+\subsubsection{Auxiliares}
+\begin{code}
 bagValor :: Bag [(a, Int)] -> [(a, Int)]
 bagValor = concat . (map novoValor) . unB
 
@@ -1235,38 +1502,6 @@ bs2 = Bcs (bl3, Bcs (bl2, Bc bl2))
 bs3 = Bc bl2
 bs4 = Bcs (bl1, Bc bl3)
 
-------------
-trans :: Either Block (Block, Transactions) -> Transactions
-trans (Left (a, (b, c))) = c
-trans (Right ((a, (b, c)), x)) = conc (c, x)
-------------
-entityValue :: Either Block (Block, Ledger) -> Ledger
-entityValue (Left (a, (b, c))) = entityLadger c
-entityValue (Right ((a, (b, c)), x)) = colocaLedger (entityLadger c, x)
-
-entityLadger :: Transactions -> Ledger
-entityLadger l = cataList insereLedger l
-
-insereLedger :: Either () (Transaction, Ledger) -> Ledger
-insereLedger (Left ()) = []
-insereLedger (Right ((e, (v, en)), t)) = cons ((en, v), cons ((e, v), t))
-
-colocaLedger :: (Ledger, Ledger) -> Ledger
-colocaLedger ([], l) = l
-colocaLedger ((h:t), l) = colocaNodo h (colocaLedger (t, l))
-              
-colocaNodo :: (Entity, Value) -> Ledger -> Ledger
-colocaNodo n [] = singl n
-colocaNodo (x, y) ((a, b):t) = if(x == a) then cons ((a, b + y), t) else cons ((a, b), colocaNodo (x, y) t)
--------------------
-block2List :: Either Block (Block, [MagicNo]) -> [MagicNo]
-block2List (Left (a, (b, c))) = singl a
-block2List (Right ((a, (b, c)), d)) = cons (a, d)
-
-verifica :: Either () (MagicNo, ([MagicNo], Bool)) -> ([MagicNo], Bool)
-verifica (Left ()) = ([], True)
-verifica (Right (val, (l, b))) = (cons (val, l) ,(not (elem val l)) && b)
----------------
 reverseChain :: Blockchain -> Blockchain
 reverseChain = cataBlockchain (either Bc snocChain)
 
@@ -1293,50 +1528,7 @@ recQTree :: (a -> d1) -> Either (b, d2) (a, (a, (a, a))) -> Either (b, d2) (d1, 
 cataQTree :: (Either (b, (Int, Int)) (d, (d, (d, d))) -> d) -> QTree b -> d
 anaQTree :: (a1 -> Either (a2, (Int, Int)) (a1, (a1, (a1, a1)))) -> a1 -> QTree a2
 hyloQTree :: (Either (b, (Int, Int)) (c, (c, (c, c))) -> c) -> (a -> Either (b, (Int, Int)) (a, (a, (a, a)))) -> a -> c
-------------------------
-rotate90 :: Either (a, (Int, Int)) (QTree a, (QTree a, (QTree a, QTree a))) -> QTree a
-rotate90 (Left (n, (x, y))) = Cell n y x
-rotate90 (Right (a, (b, (c, d)))) = Block c a d b
-------------------
-amplia :: Int -> Either (a, (Int, Int)) (QTree a, (QTree a, (QTree a, QTree a))) -> QTree a
-amplia i (Left (n, (x, y))) = (Cell n (x * i) (y * i)) 
-amplia i (Right (a, (b, (c, d)))) = (Block a b c d)
--------------------
-inverte :: Matrix PixelRGBA8 -> Matrix PixelRGBA8
-inverte m = (fromList (nrows m) (ncols m) (cataList (inverteLista) (toList m)))
 
-inverteLista :: Either () (PixelRGBA8, [PixelRGBA8]) -> [PixelRGBA8]
-inverteLista (Left nil) = []
-inverteLista (Right (PixelRGBA8 r g b a, xs)) = PixelRGBA8 (255 - r) (255 - g) (255 - b) a : xs
-----------------
-comprimeAna :: (Int, QTree a) -> Either (a, (Int, Int)) ((Int, QTree a), ((Int, QTree a), ((Int, QTree a), (Int, QTree a))))
-comprimeAna (_, (Cell n x y)) = i1 ((n, (x, y)))
-comprimeAna (0, (Block a b c d)) = i1 (block2CellAna (Block a b c d))
-comprimeAna (alt, (Block a b c d)) = i2 ((n, a), ((n, b), ((n, c), ((n, d)))))
-          where n = pred alt
-
-block2CellAna :: QTree a -> (a, (Int, Int))
-block2CellAna (Cell n x y) = (n, (x, y))
-block2CellAna (Block a b c d) = calculaAna (block2CellAna a) (block2CellAna b) (block2CellAna c) (block2CellAna d)
-
-calculaAna :: (a, (Int, Int)) -> (a, (Int, Int)) -> (a, (Int, Int)) -> (a, (Int, Int)) -> (a, (Int, Int))
-calculaAna (a, (b, c)) (_, (d, _)) (_, (_, e)) _ = (a, (b + d, c + e))
-----------------
-uncurryCell :: (a -> b -> c -> d) -> (a, (b, c)) -> d
-uncurryCell a (b, (c, d)) = a b c d
-
-curryCell :: ((a, (b, c)) -> d) -> a -> b -> c -> d
-curryCell d a b c = d (a,(b, c)) 
-
-uncurryBlock :: (a -> b -> c -> d -> e) -> (a, (b, (c, d))) -> e
-uncurryBlock a (b, (c, (d, e))) = a b c d e 
-
-curryBlock :: ((a, (b, (c, d))) -> e) -> a -> b -> c -> d -> e
-curryBlock e a b c d = e (a, (b, (c, d)))
-
-baseQTreefst :: (a1 -> b) -> (a1, d2) -> (b, d2)
-baseQTreefst g (a1, d2) = (g a1, d2)
-------------
 instance (Eq a,Arbitrary a) => Arbitrary (QTree a) where
   arbitrary = do
     rows <- QuickCheck.choose (1,100)
@@ -1456,17 +1648,6 @@ depthFTree :: FTree a b -> Int
 depthFTree = cataFTree (either (const 0) g)
     where g (a,(l,r)) = max l r + 1
 
-constroiAna :: (Int, Square) -> Either Square (Square, ((Int, Square), (Int, Square)))
-constroiAna (0, x) = i1 (x)
-constroiAna (i, x) = i2 (x, ((ant, (sqrt(2) / 2) * x), (ant, (sqrt(2) / 2) * x)))
-          where ant = pred i
-------------
-uncurryComp :: (a -> b -> c -> d) -> (a, (b, c)) -> d
-uncurryComp f (x, (y, z)) = f x y z
-
-curryComp :: ((a, (b, c)) -> d) -> a -> b -> c -> d
-curryComp f x y z = f (x, (y, z))
------
 isBalancedFTree :: FTree a b -> Bool
 isBalancedFTree = isJust . cataFTree (either (const (Just 0)) g)
     where
