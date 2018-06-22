@@ -299,7 +299,7 @@
 \\\hline
 a81960 & Luís Filipe da Costa Capa
 \\
-a22222 & Nome2 (preencher)	
+a82263 & Moisés Antunes
 \\
 a83170 & Pedro Miguel da Costa Capa
 \end{tabular}
@@ -1318,23 +1318,67 @@ outras funções auxiliares que sejam necessárias.
 \>[B]{}\Varid{anaBlockchain}\;\Varid{f}\mathrel{=}\Varid{inBlockchain}\comp (\Varid{recBlockchain}\;(\Varid{anaBlockchain}\;\Varid{f}))\comp \Varid{f}{}\<[E]%
 \\
 \>[B]{}\Varid{hyloBlockchain}\;\Varid{f}\;\Varid{g}\mathrel{=}\Varid{cataBlockchain}\;\Varid{f}\comp \Varid{anaBlockchain}\;\Varid{g}{}\<[E]%
-\\[\blanklineskip]%
-\>[B]{}\Varid{allTransactions}\;\Varid{b}\mathrel{=}\Varid{cataBlockchain}\;\Varid{trans}\;\Varid{b}{}\<[E]%
-\\
-\>[B]{}\Varid{ledger}\;\Varid{b}\mathrel{=}\Varid{cataBlockchain}\;\Varid{entityValue}\;\Varid{b}{}\<[E]%
-\\
-\>[B]{}\Varid{isValidMagicNr}\;\Varid{b}\mathrel{=}\p2\;(\Varid{cataList}\;\Varid{verifica}\;(\Varid{cataBlockchain}\;\Varid{block2List}\;\Varid{b})){}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
 
+\subsubsection*{allTransactions}
+A função allTransactions calcula a lista de transações de um dado Blockchain.
+Para tal é recorrido a um catamorfismo, que tem como gene a função trans.
+Esta função retorna as transações caso receba um block, ou concatena
+as transações do block com o resultado do catamorfismo para o Blockchain.
+\begin{eqnarray*}
+\xymatrix@C=2cm{
+  \ensuremath{\Conid{Blockchain}}
+    \ar[r]_-{\ensuremath{\Varid{inBlockchain}}}
+    \ar[d]_-{\ensuremath{\Varid{allTransactions}}}
+&
+  \ensuremath{\Conid{Block}\mathbin{+}\Conid{Block}\times\Conid{Blockchain}}
+    \ar[d]_-{id + id * allTransactions}
+    \ar[l]_-{outBlockchain}
+\\
+  \ensuremath{\Conid{Transactions}}
+&
+  \ensuremath{\Conid{Block}\mathbin{+}\Conid{Block}\times\Conid{Transactions}}
+    \ar[l]_-{\ensuremath{\Varid{trans}}}
+}
+\end{eqnarray*}
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{allTransactions}\;\Varid{b}\mathrel{=}\Varid{cataBlockchain}\;\Varid{trans}\;\Varid{b}{}\<[E]%
+\\[\blanklineskip]%
 \>[B]{}\Varid{trans}\mathbin{::}\Conid{Block}+(\Conid{Block},\Conid{Transactions})\to \Conid{Transactions}{}\<[E]%
 \\
 \>[B]{}\Varid{trans}\;(i_1\;(\Varid{a},(\Varid{b},\Varid{c})))\mathrel{=}\Varid{c}{}\<[E]%
 \\
 \>[B]{}\Varid{trans}\;(i_2\;((\Varid{a},(\Varid{b},\Varid{c})),\Varid{x}))\mathrel{=}\mathsf{conc}\;(\Varid{c},\Varid{x}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+\subsubsection*{ledger}
+A função ledger calcula o ledger de cada entidade num dado Blockchain.
+Esta função foi resolvida recorrendo a um catamorfismo, que temo a função entityValue com gene.
+A entityValue retorna o Ledger contida no Blockchain e insere-o no Ledger resultante da chamada recursiva.
+\begin{eqnarray*}
+\xymatrix@C=2cm{
+  \ensuremath{\Conid{Blockchain}}
+    \ar[r]_-{\ensuremath{\Varid{inBlockchain}}}
+    \ar[d]_-{\ensuremath{\Varid{ledger}}}
+&
+  \ensuremath{\Conid{Block}\mathbin{+}\Conid{Block}\times\Conid{Blockchain}}
+    \ar[d]_-{id + id * ledger}
+    \ar[l]_-{outBlockchain}
+\\
+  \ensuremath{\Conid{Ledger}}
+&
+  \ensuremath{\Conid{Block}\mathbin{+}\Conid{Block}\times\Conid{Ledger}}
+    \ar[l]_-{\ensuremath{\Varid{entityValue}}}
+}
+\end{eqnarray*}
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{ledger}\;\Varid{b}\mathrel{=}\Varid{cataBlockchain}\;\Varid{entityValue}\;\Varid{b}{}\<[E]%
 \\[\blanklineskip]%
 \>[B]{}\Varid{entityValue}\mathbin{::}\Conid{Block}+(\Conid{Block},\Conid{Ledger})\to \Conid{Ledger}{}\<[E]%
 \\
@@ -1363,6 +1407,33 @@ outras funções auxiliares que sejam necessárias.
 \>[B]{}\Varid{colocaNodo}\;\Varid{n}\;[\mskip1.5mu \mskip1.5mu]\mathrel{=}\Varid{singl}\;\Varid{n}{}\<[E]%
 \\
 \>[B]{}\Varid{colocaNodo}\;(\Varid{x},\Varid{y})\;((\Varid{a},\Varid{b})\mathbin{:}\Varid{t})\mathrel{=}\mathbf{if}\;(\Varid{x}\equiv \Varid{a})\;\mathbf{then}\;\Varid{cons}\;((\Varid{a},\Varid{b}\mathbin{+}\Varid{y}),\Varid{t})\;\mathbf{else}\;\Varid{cons}\;((\Varid{a},\Varid{b}),\Varid{colocaNodo}\;(\Varid{x},\Varid{y})\;\Varid{t}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+\subsubsection*{isValidMagicNr}
+A função isValidMagicNr testa se todos os MagicNr de um Blockchain são válidos.
+Esta função transforma um Blockchain numa lista de MagicNr e atraves do catamorfismo de listas é testado
+se todos os MagicNr são válidos.
+\begin{eqnarray*}
+\xymatrix@C=2cm{
+  \ensuremath{\Conid{Blockchain}}
+    \ar[r]_-{\ensuremath{\Varid{inBlockchain}}}
+    \ar[d]_-{\ensuremath{\Varid{isValidMagicNr}}}
+&
+  \ensuremath{\Conid{Block}\mathbin{+}\Conid{Block}\times\Conid{Blockchain}}
+    \ar[d]_-{id + id * isValidMagicNr}
+    \ar[l]_-{outBlockchain}
+\\
+  \ensuremath{\Conid{Ledger}}
+&
+  \ensuremath{\Conid{Block}\mathbin{+}\Conid{Block}\times\Conid{MagicNr}\mathbin{*}}
+    \ar[l]_-{\ensuremath{\Varid{block2List}}}
+}
+\end{eqnarray*}
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{isValidMagicNr}\;\Varid{b}\mathrel{=}\p2\;(\Varid{cataList}\;\Varid{verifica}\;(\Varid{cataBlockchain}\;\Varid{block2List}\;\Varid{b})){}\<[E]%
 \\[\blanklineskip]%
 \>[B]{}\Varid{block2List}\mathbin{::}\Conid{Block}+(\Conid{Block},[\mskip1.5mu \Conid{MagicNo}\mskip1.5mu])\to [\mskip1.5mu \Conid{MagicNo}\mskip1.5mu]{}\<[E]%
 \\
@@ -1377,7 +1448,6 @@ outras funções auxiliares que sejam necessárias.
 \>[B]{}\Varid{verifica}\;(i_2\;(\Varid{val},(\Varid{l},\Varid{b})))\mathrel{=}(\Varid{cons}\;(\Varid{val},\Varid{l}),(\neg \;(\Varid{elem}\;\Varid{val}\;\Varid{l}))\mathrel{\wedge}\Varid{b}){}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-
 
 \subsection*{Problema 2}
 
@@ -1408,33 +1478,115 @@ outras funções auxiliares que sejam necessárias.
 \>[B]{}\hsindent{5}{}\<[5]%
 \>[5]{}\mathsf{fmap}\;\Varid{f}\mathrel{=}\Varid{cataQTree}\;(\Varid{inQTree}\comp \Varid{baseQTree}\;\Varid{f}\;\Varid{id}){}\<[E]%
 \\[\blanklineskip]%
-\>[B]{}\Varid{rotateQTree}\;\Varid{q}\mathrel{=}\Varid{cataQTree}\;\Varid{rotate90}\;\Varid{q}{}\<[E]%
-\\
-\>[B]{}\Varid{scaleQTree}\;\Varid{i}\;\Varid{q}\mathrel{=}\Varid{cataQTree}\;(\Varid{amplia}\;\Varid{i})\;\Varid{q}{}\<[E]%
-\\
-\>[B]{}\Varid{invertQTree}\;\Varid{q}\mathrel{=}\Varid{bm2qt}\;(\Varid{inverte}\;(\Varid{qt2bm}\;\Varid{q})){}\<[E]%
-\\
-\>[B]{}\Varid{compressQTree}\;\Varid{c}\;\Varid{q}\mathrel{=}\Varid{anaQTree}\;\Varid{comprimeAna}\;((\Varid{depthQTree}\;\Varid{q})\mathbin{-}\Varid{c},\Varid{q}){}\<[E]%
-\\
 \>[B]{}\Varid{outlineQTree}\;\Varid{f}\;\Varid{q}\mathrel{=}\Varid{qt2bm}\;(\mathsf{fmap}\;\Varid{f}\;\Varid{q}){}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
 
+\subsubsection*{rotateQTree}
+Função que roda um imagem 90º no sentido horário.
+A função usa um catamorfismo que tem a função rotate90 como gene.
+A rotate90 troca a ordem das subárvores de um Block e troca as coordenadas do Cell.
+\begin{eqnarray*}
+\xymatrix@C=5cm{
+  \ensuremath{\Conid{QTree}\;\Varid{a}}
+    \ar[r]_-{\ensuremath{\Varid{inQTree}}}
+    \ar[d]_-{\ensuremath{\Varid{rotateQTree}}}
+&
+  \ensuremath{\Conid{Cell}\mathbin{+}(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times\Conid{QTree}\;\Varid{a})))}
+    \ar[d]_-{\ensuremath{\Varid{id}\mathbin{+}(\Varid{rotateQTree}\times(\Varid{rotateQTree}\times(\Varid{rotateQTree}\times\Varid{rotateQTree})))}}
+    \ar[l]_-{\ensuremath{\Varid{outQTree}}}
+\\
+  \ensuremath{\Conid{QTree}\;\Varid{a}}
+&
+  \ensuremath{\Conid{Cell}\mathbin{+}(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times\Conid{QTree}\;\Varid{a})))}
+    \ar[l]_-{\ensuremath{\Varid{rotate90}}}
+}
+\end{eqnarray*}
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{11}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{rotateQTree}\;\Varid{q}\mathrel{=}\Varid{cataQTree}\;\Varid{rotate90}\;\Varid{q}{}\<[E]%
+\\[\blanklineskip]%
 \>[B]{}\Varid{rotate90}\mathbin{::}(\Varid{a},(\Conid{Int},\Conid{Int}))+(\Conid{QTree}\;\Varid{a},(\Conid{QTree}\;\Varid{a},(\Conid{QTree}\;\Varid{a},\Conid{QTree}\;\Varid{a})))\to \Conid{QTree}\;\Varid{a}{}\<[E]%
 \\
 \>[B]{}\Varid{rotate90}\;(i_1\;(\Varid{n},(\Varid{x},\Varid{y})))\mathrel{=}\Conid{Cell}\;\Varid{n}\;\Varid{y}\;\Varid{x}{}\<[E]%
 \\
 \>[B]{}\Varid{rotate90}\;(i_2\;(\Varid{a},(\Varid{b},(\Varid{c},\Varid{d}))))\mathrel{=}\Conid{Block}\;\Varid{c}\;\Varid{a}\;\Varid{d}\;\Varid{b}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+\subsubsection*{scaleQTree}
+Função que aumenta o tamanho de uma QTree segundo um inteiro.
+A função é catamorfismo que tem como gene a função amplia, que
+mantém os Blocks inalterados e altera o tamanho das Cells.
+\begin{eqnarray*}
+\xymatrix@C=5cm{
+  \ensuremath{\Conid{QTree}\;\Varid{a}}
+    \ar[r]_-{\ensuremath{\Varid{inQTree}}}
+    \ar[d]_-{\ensuremath{\Varid{scaleQTree}}}
+&
+  \ensuremath{\Conid{Cell}\mathbin{+}(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times\Conid{QTree}\;\Varid{a})))}
+    \ar[d]_-{\ensuremath{\Varid{id}\mathbin{+}(\Varid{scaleQTree}\times(\Varid{scaleQTree}\times(\Varid{scaleQTree}\times\Varid{scaleQTree})))}}
+    \ar[l]_-{\ensuremath{\Varid{outQTree}}}
+\\
+  \ensuremath{\Conid{QTree}\;\Varid{a}}
+&
+  \ensuremath{\Conid{Cell}\mathbin{+}(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times\Conid{QTree}\;\Varid{a})))}
+    \ar[l]_-{\ensuremath{\Varid{amplia}}}
+}
+\end{eqnarray*}
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{scaleQTree}\;\Varid{i}\;\Varid{q}\mathrel{=}\Varid{cataQTree}\;(\Varid{amplia}\;\Varid{i})\;\Varid{q}{}\<[E]%
 \\[\blanklineskip]%
 \>[B]{}\Varid{amplia}\mathbin{::}\Conid{Int}\to (\Varid{a},(\Conid{Int},\Conid{Int}))+(\Conid{QTree}\;\Varid{a},(\Conid{QTree}\;\Varid{a},(\Conid{QTree}\;\Varid{a},\Conid{QTree}\;\Varid{a})))\to \Conid{QTree}\;\Varid{a}{}\<[E]%
 \\
 \>[B]{}\Varid{amplia}\;\Varid{i}\;(i_1\;(\Varid{n},(\Varid{x},\Varid{y})))\mathrel{=}(\Conid{Cell}\;\Varid{n}\;(\Varid{x}\mathbin{*}\Varid{i})\;(\Varid{y}\mathbin{*}\Varid{i})){}\<[E]%
 \\
 \>[B]{}\Varid{amplia}\;\Varid{i}\;(i_2\;(\Varid{a},(\Varid{b},(\Varid{c},\Varid{d}))))\mathrel{=}(\Conid{Block}\;\Varid{a}\;\Varid{b}\;\Varid{c}\;\Varid{d}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+\subsubsection*{invertQTree}
+Função que inverte as cores de uma imagem.
+Para tal a imagem foi convertida para uma matriz e através de um catamorfismo,
+conteúdo de cada posição foi alterado.
+Por fim, a matriz foi convertida para uma qtree.
+
+\begin{eqnarray*}
+\xymatrix@C=2cm{
+  \ensuremath{\Conid{QTree}\;\Varid{a}}
+    \ar[r]_-{\ensuremath{\Varid{qt2bm}}}
+&
+  \ensuremath{\Conid{Matrix}\;\Varid{a}}
+    \ar[r]_-{\ensuremath{\Varid{scaleQTree}}}
+&
+  \ensuremath{\Conid{Matrix}\;\Varid{a}}
+    \ar[r]_-{\ensuremath{\Varid{bm2qt}}}
+&
+  \ensuremath{\Conid{QTree}\;\Varid{a}}
+}
+
+\xymatrix@C=5cm{
+  \ensuremath{\Conid{QTree}\;\Varid{a}}
+    \ar[r]_-{\ensuremath{\Varid{inQTree}}}
+    \ar[d]_-{\ensuremath{\Varid{scaleQTree}}}
+&
+  \ensuremath{\Conid{Cell}\mathbin{+}(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times\Conid{QTree}\;\Varid{a})))}
+    \ar[d]_-{\ensuremath{\Varid{id}\mathbin{+}(\Varid{scaleQTree}\times(\Varid{scaleQTree}\times(\Varid{scaleQTree}\times\Varid{scaleQTree})))}}
+    \ar[l]_-{\ensuremath{\Varid{outQTree}}}
+\\
+  \ensuremath{\Conid{QTree}\;\Varid{a}}
+&
+  \ensuremath{\Conid{Cell}\mathbin{+}(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times\Conid{QTree}\;\Varid{a})))}
+    \ar[l]_-{\ensuremath{\Varid{amplia}}}
+}
+\end{eqnarray*}
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{invertQTree}\;\Varid{q}\mathrel{=}\Varid{bm2qt}\;(\Varid{inverte}\;(\Varid{qt2bm}\;\Varid{q})){}\<[E]%
 \\[\blanklineskip]%
 \>[B]{}\Varid{inverte}\mathbin{::}\Conid{Matrix}\;\Conid{PixelRGBA8}\to \Conid{Matrix}\;\Conid{PixelRGBA8}{}\<[E]%
 \\
@@ -1445,6 +1597,21 @@ outras funções auxiliares que sejam necessárias.
 \>[B]{}\Varid{inverteLista}\;(i_1\;\Varid{nil})\mathrel{=}[\mskip1.5mu \mskip1.5mu]{}\<[E]%
 \\
 \>[B]{}\Varid{inverteLista}\;(i_2\;(\Conid{PixelRGBA8}\;\Varid{r}\;\Varid{g}\;\Varid{b}\;\Varid{a},\Varid{xs}))\mathrel{=}\Conid{PixelRGBA8}\;(\mathrm{255}\mathbin{-}\Varid{r})\;(\mathrm{255}\mathbin{-}\Varid{g})\;(\mathrm{255}\mathbin{-}\Varid{b})\;\Varid{a}\mathbin{:}\Varid{xs}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+\subsubsection*{compressQTree}
+A função compressQTree reduz a profundidade da QTree, consequentemente, reduz a qualidade da imagem.
+Para a resolução deste problema foi dicidido utilizar um catamorfismo de QTree.
+A função utilizado como gene foi a comprimeAna. Esta função recebia um Int como argumento e uma QTree. No caso de ser uma
+Cell retornava o conteúdo da Cell. Se a altura fosse zero, transformava o Block numa Cell, recorrendo à função block2CellAna.
+Se fosse um block em que a altura fosse superior a zero retornava o conteúdo do block.
+
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{11}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{compressQTree}\;\Varid{c}\;\Varid{q}\mathrel{=}\Varid{anaQTree}\;\Varid{comprimeAna}\;((\Varid{depthQTree}\;\Varid{q})\mathbin{-}\Varid{c},\Varid{q}){}\<[E]%
 \\[\blanklineskip]%
 \>[B]{}\Varid{comprimeAna}\mathbin{::}(\Conid{Int},\Conid{QTree}\;\Varid{a})\to (\Varid{a},(\Conid{Int},\Conid{Int}))+((\Conid{Int},\Conid{QTree}\;\Varid{a}),((\Conid{Int},\Conid{QTree}\;\Varid{a}),((\Conid{Int},\Conid{QTree}\;\Varid{a}),(\Conid{Int},\Conid{QTree}\;\Varid{a})))){}\<[E]%
 \\
@@ -1466,7 +1633,13 @@ outras funções auxiliares que sejam necessárias.
 \>[B]{}\Varid{calculaAna}\mathbin{::}(\Varid{a},(\Conid{Int},\Conid{Int}))\to (\Varid{a},(\Conid{Int},\Conid{Int}))\to (\Varid{a},(\Conid{Int},\Conid{Int}))\to (\Varid{a},(\Conid{Int},\Conid{Int}))\to (\Varid{a},(\Conid{Int},\Conid{Int})){}\<[E]%
 \\
 \>[B]{}\Varid{calculaAna}\;(\Varid{a},(\Varid{b},\Varid{c}))\;(\anonymous ,(\Varid{d},\anonymous ))\;(\anonymous ,(\anonymous ,\Varid{e}))\;\anonymous \mathrel{=}(\Varid{a},(\Varid{b}\mathbin{+}\Varid{d},\Varid{c}\mathbin{+}\Varid{e})){}\<[E]%
-\\[\blanklineskip]%
+\ColumnHook
+\end{hscode}\resethooks
+
+\subsubsection*{Auxiliares}
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
 \>[B]{}\Varid{uncurryCell}\mathbin{::}(\Varid{a}\to \Varid{b}\to \Varid{c}\to \Varid{d})\to (\Varid{a},(\Varid{b},\Varid{c}))\to \Varid{d}{}\<[E]%
 \\
 \>[B]{}\Varid{uncurryCell}\;\Varid{a}\;(\Varid{b},(\Varid{c},\Varid{d}))\mathrel{=}\Varid{a}\;\Varid{b}\;\Varid{c}\;\Varid{d}{}\<[E]%
@@ -1605,29 +1778,20 @@ outras funções auxiliares que sejam necessárias.
 \>[B]{}\hsindent{5}{}\<[5]%
 \>[5]{}\Varid{bimap}\;\Varid{f}\;\Varid{g}\mathrel{=}\Varid{cataFTree}\;(\Varid{inFTree}\comp \Varid{baseFTree}\;\Varid{f}\;\Varid{g}\;\Varid{id}){}\<[E]%
 \\[\blanklineskip]%
-\>[B]{}\Varid{generatePTree}\;\Varid{i}\mathrel{=}\Varid{anaFTree}\;\Varid{constroiAna}\;(\Varid{i},\mathrm{2.0}){}\<[E]%
-\\
 \>[B]{}\Varid{drawPTree}\mathrel{=}\bot {}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
 
-\begin{eqnarray*}
-\xymatrix@C=2cm{
-  \ensuremath{\N_0\times\Conid{Square}}
-      \ar[u]_-{\ensuremath{\Varid{constroiAna}}}
-      \ar[r]_-{\ensuremath{\Varid{out}\times\Varid{id}}}
-&
-  \ensuremath{\mathrm{1}\mathbin{+}\N_0\times\N_0}
-      \ar[r]_-{\ensuremath{\Varid{constroiAna}}}
-&
-  \ensuremath{\Conid{Square}\mathbin{+}\Conid{Square}\times(\N_0\times\Conid{Square})\lambda \Varid{ar}\;[\mskip1.5mu \Varid{llu}\mskip1.5mu]\mathbin{\char94 -}\{\mskip1.5mu }id + id >< constroiAna}
-\\
-  \ensuremath{\Conid{PTree}}
-&
-  \ensuremath{\Conid{Square}\mathbin{+}\Conid{Square}\times(\Conid{PTree}\times\Conid{PTree})}
-      \ar[l]_-{\ensuremath{\Varid{inFTree}}}
-}
-\end{eqnarray*}
+\subsubsection*{generatePTree}
+A função generatePTree é um anamorfismo, no qual a função argumento
+recebe um tuplo, (Int, Square), e gera um nodo para uma FTree, em que o tamanho do nodo é o recebido como argumento.
+
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{generatePTree}\;\Varid{i}\mathrel{=}\Varid{anaFTree}\;\Varid{constroiAna}\;(\Varid{i},\mathrm{2.0}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
 
 \subsubsection*{Auxiliares}
 \begin{hscode}\SaveRestoreHook

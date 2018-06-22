@@ -109,7 +109,7 @@
 \\\hline
 a81960 & Luís Filipe da Costa Capa
 \\
-a22222 & Nome2 (preencher)	
+a82263 & Moisés Antunes
 \\
 a83170 & Pedro Miguel da Costa Capa
 \end{tabular}
@@ -981,16 +981,59 @@ recBlockchain f = id -|- id >< f
 cataBlockchain f = f . (recBlockchain (cataBlockchain f)) . outBlockchain
 anaBlockchain f = inBlockchain . (recBlockchain (anaBlockchain f)) . f
 hyloBlockchain f g = cataBlockchain f . anaBlockchain g
-
-allTransactions b = cataBlockchain trans b
-ledger b = cataBlockchain entityValue b 
-isValidMagicNr b = p2 (cataList verifica (cataBlockchain block2List b))
 \end{code}
 
+\subsubsection*{allTransactions}
+A função allTransactions calcula a lista de transações de um dado Blockchain.
+Para tal é recorrido a um catamorfismo, que tem como gene a função trans.
+Esta função retorna as transações caso receba um block, ou concatena
+as transações do block com o resultado do catamorfismo para o Blockchain.
+\begin{eqnarray*}
+\xymatrix@@C=2cm{
+  |Blockchain|
+    \ar[r]_-{|inBlockchain|}
+    \ar[d]_-{|allTransactions|}
+&
+  |Block + Block >< Blockchain|
+    \ar[d]_-{id + id * allTransactions}
+    \ar[l]_-{outBlockchain}
+\\
+  |Transactions|
+&
+  |Block + Block >< Transactions|
+    \ar[l]_-{|trans|}
+}
+\end{eqnarray*}
 \begin{code}
+allTransactions b = cataBlockchain trans b
+
 trans :: Either Block (Block, Transactions) -> Transactions
 trans (Left (a, (b, c))) = c
 trans (Right ((a, (b, c)), x)) = conc (c, x)
+\end{code}
+
+\subsubsection*{ledger}
+A função ledger calcula o ledger de cada entidade num dado Blockchain.
+Esta função foi resolvida recorrendo a um catamorfismo, que temo a função entityValue com gene.
+A entityValue retorna o Ledger contida no Blockchain e insere-o no Ledger resultante da chamada recursiva.
+\begin{eqnarray*}
+\xymatrix@@C=2cm{
+  |Blockchain|
+    \ar[r]_-{|inBlockchain|}
+    \ar[d]_-{|ledger|}
+&
+  |Block + Block >< Blockchain|
+    \ar[d]_-{id + id * ledger}
+    \ar[l]_-{outBlockchain}
+\\
+  |Ledger|
+&
+  |Block + Block >< Ledger|
+    \ar[l]_-{|entityValue|}
+}
+\end{eqnarray*}
+\begin{code}
+ledger b = cataBlockchain entityValue b
 
 entityValue :: Either Block (Block, Ledger) -> Ledger
 entityValue (Left (a, (b, c))) = entityLadger c
@@ -1010,6 +1053,30 @@ colocaLedger ((h:t), l) = colocaNodo h (colocaLedger (t, l))
 colocaNodo :: (Entity, Value) -> Ledger -> Ledger
 colocaNodo n [] = singl n
 colocaNodo (x, y) ((a, b):t) = if(x == a) then cons ((a, b + y), t) else cons ((a, b), colocaNodo (x, y) t)
+\end{code}
+
+\subsubsection*{isValidMagicNr}
+A função isValidMagicNr testa se todos os MagicNr de um Blockchain são válidos.
+Esta função transforma um Blockchain numa lista de MagicNr e atraves do catamorfismo de listas é testado
+se todos os MagicNr são válidos.
+\begin{eqnarray*}
+\xymatrix@@C=2cm{
+  |Blockchain|
+    \ar[r]_-{|inBlockchain|}
+    \ar[d]_-{|isValidMagicNr|}
+&
+  |Block + Block >< Blockchain|
+    \ar[d]_-{id + id * isValidMagicNr}
+    \ar[l]_-{outBlockchain}
+\\
+  |Ledger|
+&
+  |Block + Block >< MagicNr*|
+    \ar[l]_-{|block2List|}
+}
+\end{eqnarray*}
+\begin{code}
+isValidMagicNr b = p2 (cataList verifica (cataBlockchain block2List b))
 
 block2List :: Either Block (Block, [MagicNo]) -> [MagicNo]
 block2List (Left (a, (b, c))) = singl a
@@ -1019,7 +1086,6 @@ verifica :: Either () (MagicNo, ([MagicNo], Bool)) -> ([MagicNo], Bool)
 verifica (Left ()) = ([], True)
 verifica (Right (val, (l, b))) = (cons (val, l) ,(not (elem val l)) && b)
 \end{code}
-
 
 \subsection*{Problema 2}
 
@@ -1036,23 +1102,102 @@ hyloQTree g h = cataQTree g . anaQTree h
 instance Functor QTree where
     fmap f = cataQTree (inQTree . baseQTree f id)
 
-rotateQTree q = cataQTree rotate90 q
-scaleQTree i q = cataQTree (amplia i) q 
-invertQTree q = bm2qt(inverte (qt2bm q))
-compressQTree c q = anaQTree comprimeAna ((depthQTree q) - c, q)
 outlineQTree f q = qt2bm (fmap f q)
 \end{code}
 
+\subsubsection*{rotateQTree}
+Função que roda um imagem 90º no sentido horário.
+A função usa um catamorfismo que tem a função rotate90 como gene.
+A rotate90 troca a ordem das subárvores de um Block e troca as coordenadas do Cell.
+\begin{eqnarray*}
+\xymatrix@@C=5cm{
+  |QTree a|
+    \ar[r]_-{|inQTree|}
+    \ar[d]_-{|rotateQTree|}
+&
+  |Cell + (QTree a >< (QTree a >< (QTree a >< QTree a)))|
+    \ar[d]_-{|id + (rotateQTree >< (rotateQTree >< (rotateQTree >< rotateQTree)))|}
+    \ar[l]_-{|outQTree|}
+\\
+  |QTree a|
+&
+  |Cell +  (QTree a >< (QTree a >< (QTree a >< QTree a)))|
+    \ar[l]_-{|rotate90|}
+}
+\end{eqnarray*}
 \begin{code}
+rotateQTree q = cataQTree rotate90 q
+
 rotate90 :: Either (a, (Int, Int)) (QTree a, (QTree a, (QTree a, QTree a))) -> QTree a
 rotate90 (Left (n, (x, y))) = Cell n y x
 rotate90 (Right (a, (b, (c, d)))) = Block c a d b
+\end{code}
 
+\subsubsection*{scaleQTree}
+Função que aumenta o tamanho de uma QTree segundo um inteiro.
+A função é catamorfismo que tem como gene a função amplia, que
+mantém os Blocks inalterados e altera o tamanho das Cells.
+\begin{eqnarray*}
+\xymatrix@@C=5cm{
+  |QTree a|
+    \ar[r]_-{|inQTree|}
+    \ar[d]_-{|scaleQTree|}
+&
+  |Cell + (QTree a >< (QTree a >< (QTree a >< QTree a)))|
+    \ar[d]_-{|id + (scaleQTree >< (scaleQTree >< (scaleQTree >< scaleQTree)))|}
+    \ar[l]_-{|outQTree|}
+\\
+  |QTree a|
+&
+  |Cell +  (QTree a >< (QTree a >< (QTree a >< QTree a)))|
+    \ar[l]_-{|amplia|}
+}
+\end{eqnarray*}
+\begin{code}
+scaleQTree i q = cataQTree (amplia i) q
 
 amplia :: Int -> Either (a, (Int, Int)) (QTree a, (QTree a, (QTree a, QTree a))) -> QTree a
 amplia i (Left (n, (x, y))) = (Cell n (x * i) (y * i)) 
 amplia i (Right (a, (b, (c, d)))) = (Block a b c d)
+\end{code}
 
+\subsubsection*{invertQTree}
+Função que inverte as cores de uma imagem.
+Para tal a imagem foi convertida para uma matriz e através de um catamorfismo,
+conteúdo de cada posição foi alterado.
+Por fim, a matriz foi convertida para uma qtree.
+
+\begin{eqnarray*}
+\xymatrix@@C=2cm{
+  |QTree a|
+    \ar[r]_-{|qt2bm|}
+&
+  |Matrix a|
+    \ar[r]_-{|scaleQTree|}
+&
+  |Matrix a|
+    \ar[r]_-{|bm2qt|}
+&
+  |QTree a|
+}
+
+\xymatrix@@C=5cm{
+  |QTree a|
+    \ar[r]_-{|inQTree|}
+    \ar[d]_-{|scaleQTree|}
+&
+  |Cell + (QTree a >< (QTree a >< (QTree a >< QTree a)))|
+    \ar[d]_-{|id + (scaleQTree >< (scaleQTree >< (scaleQTree >< scaleQTree)))|}
+    \ar[l]_-{|outQTree|}
+\\
+  |QTree a|
+&
+  |Cell +  (QTree a >< (QTree a >< (QTree a >< QTree a)))|
+    \ar[l]_-{|amplia|}
+}
+\end{eqnarray*}
+\begin{code}
+invertQTree q = bm2qt(inverte (qt2bm q))
 
 inverte :: Matrix PixelRGBA8 -> Matrix PixelRGBA8
 inverte m = (fromList (nrows m) (ncols m) (cataList (inverteLista) (toList m)))
@@ -1060,7 +1205,17 @@ inverte m = (fromList (nrows m) (ncols m) (cataList (inverteLista) (toList m)))
 inverteLista :: Either () (PixelRGBA8, [PixelRGBA8]) -> [PixelRGBA8]
 inverteLista (Left nil) = []
 inverteLista (Right (PixelRGBA8 r g b a, xs)) = PixelRGBA8 (255 - r) (255 - g) (255 - b) a : xs
+\end{code}
 
+\subsubsection*{compressQTree}
+A função compressQTree reduz a profundidade da QTree, consequentemente, reduz a qualidade da imagem.
+Para a resolução deste problema foi dicidido utilizar um catamorfismo de QTree.
+A função utilizado como gene foi a comprimeAna. Esta função recebia um Int como argumento e uma QTree. No caso de ser uma
+Cell retornava o conteúdo da Cell. Se a altura fosse zero, transformava o Block numa Cell, recorrendo à função block2CellAna.
+Se fosse um block em que a altura fosse superior a zero retornava o conteúdo do block.
+
+\begin{code}
+compressQTree c q = anaQTree comprimeAna ((depthQTree q) - c, q)
 
 comprimeAna :: (Int, QTree a) -> Either (a, (Int, Int)) ((Int, QTree a), ((Int, QTree a), ((Int, QTree a), (Int, QTree a))))
 comprimeAna (_, (Cell n x y)) = i1 ((n, (x, y)))
@@ -1074,7 +1229,10 @@ block2CellAna (Block a b c d) = calculaAna (block2CellAna a) (block2CellAna b) (
 
 calculaAna :: (a, (Int, Int)) -> (a, (Int, Int)) -> (a, (Int, Int)) -> (a, (Int, Int)) -> (a, (Int, Int))
 calculaAna (a, (b, c)) (_, (d, _)) (_, (_, e)) _ = (a, (b + d, c + e))
+\end{code}
 
+\subsubsection*{Auxiliares}
+\begin{code}
 
 uncurryCell :: (a -> b -> c -> d) -> (a, (b, c)) -> d
 uncurryCell a (b, (c, d)) = a b c d
@@ -1212,8 +1370,15 @@ hyloFTree f g = cataFTree f . anaFTree g
 instance Bifunctor FTree where
     bimap f g = cataFTree (inFTree . baseFTree f g id)
 
-generatePTree i = anaFTree constroiAna (i, 2.0)
 drawPTree = undefined
+\end{code}
+
+\subsubsection*{generatePTree}
+A função generatePTree é um anamorfismo, no qual a função argumento
+recebe um tuplo, (Int, Square), e gera um nodo para uma FTree, em que o tamanho do nodo é o recebido como argumento.
+
+\begin{code}
+generatePTree i = anaFTree constroiAna (i, 2.0)
 \end{code}
 
 \subsubsection*{Auxiliares}
