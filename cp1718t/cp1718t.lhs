@@ -105,7 +105,7 @@
 
 \begin{center}\large
 \begin{tabular}{ll}
-\textbf{Grupo} nr. & 54 (preencher)
+\textbf{Grupo} nr. & 54
 \\\hline
 a81960 & Luís Filipe da Costa Capa
 \\
@@ -1069,10 +1069,26 @@ se todos os MagicNr são válidos.
     \ar[d]_-{id + id * isValidMagicNr}
     \ar[l]_-{outBlockchain}
 \\
-  |Ledger|
+  |MagicNr*|
 &
   |Block + Block >< MagicNr*|
     \ar[l]_-{|block2List|}
+}
+\end{eqnarray*}
+
+\begin{eqnarray*}
+\xymatrix@@C=2cm{
+  |Blockchain|
+    \ar[r]_-{|block2List|}
+    \ar[d]_-{|isValidMagicNr|}
+&
+  |MagicNr*|
+    \ar[d]_-{|verifica|}
+\\
+  |Bool|
+&
+  |MagicNr* >< Bool|
+    \ar[l]_-{|p2|}
 }
 \end{eqnarray*}
 \begin{code}
@@ -1101,8 +1117,6 @@ hyloQTree g h = cataQTree g . anaQTree h
 
 instance Functor QTree where
     fmap f = cataQTree (inQTree . baseQTree f id)
-
-outlineQTree f q = qt2bm (fmap f q)
 \end{code}
 
 \subsubsection*{rotateQTree}
@@ -1115,13 +1129,13 @@ A rotate90 troca a ordem das subárvores de um Block e troca as coordenadas do C
     \ar[r]_-{|inQTree|}
     \ar[d]_-{|rotateQTree|}
 &
-  |Cell + (QTree a >< (QTree a >< (QTree a >< QTree a)))|
+  |Cell a + (QTree a >< (QTree a >< (QTree a >< QTree a)))|
     \ar[d]_-{|id + (rotateQTree >< (rotateQTree >< (rotateQTree >< rotateQTree)))|}
     \ar[l]_-{|outQTree|}
 \\
   |QTree a|
 &
-  |Cell +  (QTree a >< (QTree a >< (QTree a >< QTree a)))|
+  |Cell a +  (QTree a >< (QTree a >< (QTree a >< QTree a)))|
     \ar[l]_-{|rotate90|}
 }
 \end{eqnarray*}
@@ -1143,13 +1157,13 @@ mantém os Blocks inalterados e altera o tamanho das Cells.
     \ar[r]_-{|inQTree|}
     \ar[d]_-{|scaleQTree|}
 &
-  |Cell + (QTree a >< (QTree a >< (QTree a >< QTree a)))|
+  |Cell a + (QTree a >< (QTree a >< (QTree a >< QTree a)))|
     \ar[d]_-{|id + (scaleQTree >< (scaleQTree >< (scaleQTree >< scaleQTree)))|}
     \ar[l]_-{|outQTree|}
 \\
   |QTree a|
 &
-  |Cell +  (QTree a >< (QTree a >< (QTree a >< QTree a)))|
+  |Cell a +  (QTree a >< (QTree a >< (QTree a >< QTree a)))|
     \ar[l]_-{|amplia|}
 }
 \end{eqnarray*}
@@ -1173,29 +1187,32 @@ Por fim, a matriz foi convertida para uma qtree.
     \ar[r]_-{|qt2bm|}
 &
   |Matrix a|
-    \ar[r]_-{|scaleQTree|}
+    \ar[r]_-{|inverte|}
 &
   |Matrix a|
     \ar[r]_-{|bm2qt|}
 &
   |QTree a|
 }
+\end{eqnarray*}
 
-\xymatrix@@C=5cm{
+\begin{eqnarray*}
+\xymatrix@@C=2cm{
   |QTree a|
     \ar[r]_-{|inQTree|}
     \ar[d]_-{|scaleQTree|}
 &
-  |Cell + (QTree a >< (QTree a >< (QTree a >< QTree a)))|
+  |Cell a + (QTree a >< (QTree a >< (QTree a >< QTree a)))|
     \ar[d]_-{|id + (scaleQTree >< (scaleQTree >< (scaleQTree >< scaleQTree)))|}
     \ar[l]_-{|outQTree|}
 \\
   |QTree a|
 &
-  |Cell +  (QTree a >< (QTree a >< (QTree a >< QTree a)))|
-    \ar[l]_-{|amplia|}
+  |Cell a +  (QTree a >< (QTree a >< (QTree a >< QTree a)))|
+    \ar[l]_-{|inverte|}
 }
 \end{eqnarray*}
+
 \begin{code}
 invertQTree q = bm2qt(inverte (qt2bm q))
 
@@ -1229,6 +1246,120 @@ block2CellAna (Block a b c d) = calculaAna (block2CellAna a) (block2CellAna b) (
 
 calculaAna :: (a, (Int, Int)) -> (a, (Int, Int)) -> (a, (Int, Int)) -> (a, (Int, Int)) -> (a, (Int, Int))
 calculaAna (a, (b, c)) (_, (d, _)) (_, (_, e)) _ = (a, (b + d, c + e))
+\end{code}
+
+\subsection*{outlineQTree}
+A função outlineQTree recebe uma função que testa quais os pixeis de fundo e converte numa matriz monocromática.
+Foi utilizado um catamorfismo que aplicava a todas as Cell a função, que era recebida como argumento.
+O gene do catamorfismo de outlineQTree é a função teste, que é basicamente um either.
+No caso de ser um pixel de fundo e é possível dividir a Cell, a função teste vai invocar funções auxiliares
+, que aumentam a profundiade da QTree, transformando 
+o Cell num BLock, para que o contorno deste possa ser diferente do interior.
+Caso não seja um pixel de fundo, este permanecia inalterado.
+
+\begin{eqnarray*}
+\xymatrix@@C=3cm{
+  |QTree a|
+    \ar[r]_-{|inQTree|}
+    \ar[d]_-{|outlineQTree|}
+&
+  |Cell a + (QTree a >< (QTree a >< (QTree a >< QTree a)))|
+    \ar[d]_-{|id + (outlineQTree >< (outlineQTree >< (outlineQTree >< outlineQTree)))|}
+    \ar[l]_-{|outQTree|}
+\\
+  |QTree Bool|
+&
+  |Cell a +  (QTree Bool >< (QTree Bool >< (QTree Bool >< QTree Bool)))|
+    \ar[l]_-{|teste|}
+}
+\end{eqnarray*}
+
+\begin{code}
+outlineQTree f q = qt2bm (cataQTree teste (fmap f q))
+
+teste :: Either (Bool,(Int, Int)) (QTree Bool, (QTree Bool, (QTree Bool, QTree Bool))) -> QTree Bool
+teste (Left (False, (x, y))) = Cell False x y
+teste (Left (True, (x, y))) = if(divideInicial (x, y))
+                              then Block (criaTopoEsq 0 nova) (criaTopoDir 0 nova) (criaFundoEsq 0 nova) (criaFundoDir 0 nova)
+                              else Cell True x y
+                              where nova = Cell True (div x 2) (div y 2)
+teste (Right (a, (b, (c, d)))) = Block a b c d
+
+criaTopoEsq :: Int -> QTree Bool -> QTree Bool
+criaTopoEsq 0 (Cell a x y) = if divide (x, y)
+                           then Block (criaTopoEsq 0 nova) (criaTopoDir 2 nova) (criaFundoEsq 1 nova) new
+                           else Cell a x y
+                           where nova = Cell a (div x 2) (div y 2)
+                                 new = Cell (not a)  (div x 2) (div y 2)
+criaTopoEsq 1 (Cell a x y) = if divide (x, y)
+                           then Block (criaTopoEsq 1 nova) new (criaFundoEsq 1 nova) new
+                           else Cell a x y
+                           where nova = Cell a (div x 2) (div y 2)
+                                 new = Cell (not a)  (div x 2) (div y 2)
+criaTopoEsq 2 (Cell a x y) = if divide (x, y)
+                           then Block (criaTopoEsq 2 nova) (criaTopoDir 2 nova) new new
+                           else Cell a x y
+                           where nova = Cell a (div x 2) (div y 2)
+                                 new = Cell (not a)  (div x 2) (div y 2)
+
+criaTopoDir :: Int ->  QTree Bool -> QTree Bool
+criaTopoDir 0 (Cell a x y) = if divide (x, y)
+                           then Block (criaTopoEsq 2 nova) (criaTopoDir 0 nova) new (criaFundoDir 1 nova)
+                           else Cell a x y
+                           where nova = Cell a (div x 2) (div y 2)
+                                 new = Cell (not a)  (div x 2) (div y 2)
+criaTopoDir 1 (Cell a x y) = if divide (x, y)
+                           then Block new (criaTopoDir 1 nova) new (criaFundoDir 1 nova)
+                           else Cell a x y
+                           where nova = Cell a (div x 2) (div y 2)
+                                 new = Cell (not a)  (div x 2) (div y 2)
+criaTopoDir 2 (Cell a x y) = if divide (x, y)
+                           then Block (criaTopoEsq 2 nova) (criaTopoDir 2 nova) new new
+                           else Cell a x y
+                           where nova = Cell a (div x 2) (div y 2)
+                                 new = Cell (not a)  (div x 2) (div y 2)
+
+
+criaFundoEsq :: Int -> QTree Bool -> QTree Bool
+criaFundoEsq 0 (Cell a x y) = if divide (x, y)
+                           then Block (criaTopoEsq 1 nova) new (criaFundoEsq 0 nova) (criaFundoDir 2 nova)
+                           else Cell a x y
+                           where nova = Cell a (div x 2) (div y 2)
+                                 new = Cell (not a)  (div x 2) (div y 2)
+criaFundoEsq 1 (Cell a x y) = if divide (x, y)
+                           then Block (criaTopoEsq 1 nova) new (criaFundoEsq 1 nova) new
+                           else Cell a x y
+                           where nova = Cell a (div x 2) (div y 2)
+                                 new = Cell (not a)  (div x 2) (div y 2)
+criaFundoEsq 2 (Cell a x y) = if divide (x, y)
+                           then Block new new (criaFundoEsq 2 nova) (criaFundoDir 2 nova)
+                           else Cell a x y
+                           where nova = Cell a (div x 2) (div y 2)
+                                 new = Cell (not a)  (div x 2) (div y 2)
+
+criaFundoDir :: Int -> QTree Bool -> QTree Bool
+criaFundoDir 0 (Cell a x y) = if divide (x, y)
+                           then Block new (criaTopoDir 1 nova) (criaFundoEsq 2 nova) (criaFundoDir 0 nova)
+                           else Cell a x y
+                           where nova = Cell a (div x 2) (div y 2)
+                                 new = Cell (not a)  (div x 2) (div y 2)
+criaFundoDir 1 (Cell a x y) = if divide (x, y)
+                           then Block new (criaTopoDir 1 nova) new (criaFundoDir 1 nova)
+                           else Cell a x y
+                           where nova = Cell a (div x 2) (div y 2)
+                                 new = Cell (not a)  (div x 2) (div y 2)
+criaFundoDir 2 (Cell a x y) = if divide (x, y)
+                           then Block new new (criaFundoEsq 2 nova) (criaFundoDir 2 nova)
+                           else Cell a x y
+                           where nova = Cell a (div x 2) (div y 2)
+                                 new = Cell (not a)  (div x 2) (div y 2)
+
+
+divide :: (Int, Int) -> Bool
+divide (x, y) = x >= 2 && y >= 2 && mod x 2 == 0 && mod y 2 == 0
+
+divideInicial :: (Int, Int) -> Bool
+divideInicial (x, y) = x >= 4 && y >= 4 && mod x 2 == 0 && mod y 2 == 0
 \end{code}
 
 \subsubsection*{Auxiliares}
@@ -1420,6 +1551,12 @@ Por fim, é aplicada a função B que soma os elementos do mesmo tipo e transfor
 \end{eqnarray*}
 \begin{code}
 muB = B  . bagValor . (fmap unB)
+
+bagValor :: Bag [(a, Int)] -> [(a, Int)]
+bagValor = concat . (map novoValor) . unB
+
+novoValor :: ([(a, Int)], Int) -> [(a, Int)]
+novoValor (x, y) = map (id >< (*y)) x
 \end{code}
 
 \subsubsection*{singletonbag}
@@ -1458,15 +1595,6 @@ Esta função transforma uma lista de tuplos, (a, Int), numa lista de (a, ProbRe
 \end{eqnarray*}
 \begin{code}
 dist b = prob b (nBags b)
-\end{code}
-
-\subsubsection{Auxiliares}
-\begin{code}
-bagValor :: Bag [(a, Int)] -> [(a, Int)]
-bagValor = concat . (map novoValor) . unB
-
-novoValor :: ([(a, Int)], Int) -> [(a, Int)]
-novoValor (x, y) = map (id >< (*y)) x
 
 prob :: Bag a -> Int -> Dist a
 prob (B t) i = D (intToProb t i)

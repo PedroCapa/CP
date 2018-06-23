@@ -295,7 +295,7 @@
 
 \begin{center}\large
 \begin{tabular}{ll}
-\textbf{Grupo} nr. & 54 (preencher)
+\textbf{Grupo} nr. & 54
 \\\hline
 a81960 & Luís Filipe da Costa Capa
 \\
@@ -1424,10 +1424,26 @@ se todos os MagicNr são válidos.
     \ar[d]_-{id + id * isValidMagicNr}
     \ar[l]_-{outBlockchain}
 \\
-  \ensuremath{\Conid{Ledger}}
+  \ensuremath{\Conid{MagicNr}\mathbin{*}}
 &
   \ensuremath{\Conid{Block}\mathbin{+}\Conid{Block}\times\Conid{MagicNr}\mathbin{*}}
     \ar[l]_-{\ensuremath{\Varid{block2List}}}
+}
+\end{eqnarray*}
+
+\begin{eqnarray*}
+\xymatrix@C=2cm{
+  \ensuremath{\Conid{Blockchain}}
+    \ar[r]_-{\ensuremath{\Varid{block2List}}}
+    \ar[d]_-{\ensuremath{\Varid{isValidMagicNr}}}
+&
+  \ensuremath{\Conid{MagicNr}\mathbin{*}}
+    \ar[d]_-{\ensuremath{\Varid{verifica}}}
+\\
+  \ensuremath{\Conid{Bool}}
+&
+  \ensuremath{\Conid{MagicNr}\mathbin{*}\times\Conid{Bool}}
+    \ar[l]_-{\ensuremath{\p2}}
 }
 \end{eqnarray*}
 \begin{hscode}\SaveRestoreHook
@@ -1477,8 +1493,6 @@ se todos os MagicNr são válidos.
 \\
 \>[B]{}\hsindent{5}{}\<[5]%
 \>[5]{}\mathsf{fmap}\;\Varid{f}\mathrel{=}\Varid{cataQTree}\;(\Varid{inQTree}\comp \Varid{baseQTree}\;\Varid{f}\;\Varid{id}){}\<[E]%
-\\[\blanklineskip]%
-\>[B]{}\Varid{outlineQTree}\;\Varid{f}\;\Varid{q}\mathrel{=}\Varid{qt2bm}\;(\mathsf{fmap}\;\Varid{f}\;\Varid{q}){}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
 
@@ -1492,13 +1506,13 @@ A rotate90 troca a ordem das subárvores de um Block e troca as coordenadas do C
     \ar[r]_-{\ensuremath{\Varid{inQTree}}}
     \ar[d]_-{\ensuremath{\Varid{rotateQTree}}}
 &
-  \ensuremath{\Conid{Cell}\mathbin{+}(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times\Conid{QTree}\;\Varid{a})))}
+  \ensuremath{\Conid{Cell}\;\Varid{a}\mathbin{+}(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times\Conid{QTree}\;\Varid{a})))}
     \ar[d]_-{\ensuremath{\Varid{id}\mathbin{+}(\Varid{rotateQTree}\times(\Varid{rotateQTree}\times(\Varid{rotateQTree}\times\Varid{rotateQTree})))}}
     \ar[l]_-{\ensuremath{\Varid{outQTree}}}
 \\
   \ensuremath{\Conid{QTree}\;\Varid{a}}
 &
-  \ensuremath{\Conid{Cell}\mathbin{+}(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times\Conid{QTree}\;\Varid{a})))}
+  \ensuremath{\Conid{Cell}\;\Varid{a}\mathbin{+}(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times\Conid{QTree}\;\Varid{a})))}
     \ar[l]_-{\ensuremath{\Varid{rotate90}}}
 }
 \end{eqnarray*}
@@ -1525,13 +1539,13 @@ mantém os Blocks inalterados e altera o tamanho das Cells.
     \ar[r]_-{\ensuremath{\Varid{inQTree}}}
     \ar[d]_-{\ensuremath{\Varid{scaleQTree}}}
 &
-  \ensuremath{\Conid{Cell}\mathbin{+}(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times\Conid{QTree}\;\Varid{a})))}
+  \ensuremath{\Conid{Cell}\;\Varid{a}\mathbin{+}(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times\Conid{QTree}\;\Varid{a})))}
     \ar[d]_-{\ensuremath{\Varid{id}\mathbin{+}(\Varid{scaleQTree}\times(\Varid{scaleQTree}\times(\Varid{scaleQTree}\times\Varid{scaleQTree})))}}
     \ar[l]_-{\ensuremath{\Varid{outQTree}}}
 \\
   \ensuremath{\Conid{QTree}\;\Varid{a}}
 &
-  \ensuremath{\Conid{Cell}\mathbin{+}(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times\Conid{QTree}\;\Varid{a})))}
+  \ensuremath{\Conid{Cell}\;\Varid{a}\mathbin{+}(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times\Conid{QTree}\;\Varid{a})))}
     \ar[l]_-{\ensuremath{\Varid{amplia}}}
 }
 \end{eqnarray*}
@@ -1560,29 +1574,32 @@ Por fim, a matriz foi convertida para uma qtree.
     \ar[r]_-{\ensuremath{\Varid{qt2bm}}}
 &
   \ensuremath{\Conid{Matrix}\;\Varid{a}}
-    \ar[r]_-{\ensuremath{\Varid{scaleQTree}}}
+    \ar[r]_-{\ensuremath{\Varid{inverte}}}
 &
   \ensuremath{\Conid{Matrix}\;\Varid{a}}
     \ar[r]_-{\ensuremath{\Varid{bm2qt}}}
 &
   \ensuremath{\Conid{QTree}\;\Varid{a}}
 }
+\end{eqnarray*}
 
-\xymatrix@C=5cm{
+\begin{eqnarray*}
+\xymatrix@C=2cm{
   \ensuremath{\Conid{QTree}\;\Varid{a}}
     \ar[r]_-{\ensuremath{\Varid{inQTree}}}
     \ar[d]_-{\ensuremath{\Varid{scaleQTree}}}
 &
-  \ensuremath{\Conid{Cell}\mathbin{+}(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times\Conid{QTree}\;\Varid{a})))}
+  \ensuremath{\Conid{Cell}\;\Varid{a}\mathbin{+}(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times\Conid{QTree}\;\Varid{a})))}
     \ar[d]_-{\ensuremath{\Varid{id}\mathbin{+}(\Varid{scaleQTree}\times(\Varid{scaleQTree}\times(\Varid{scaleQTree}\times\Varid{scaleQTree})))}}
     \ar[l]_-{\ensuremath{\Varid{outQTree}}}
 \\
   \ensuremath{\Conid{QTree}\;\Varid{a}}
 &
-  \ensuremath{\Conid{Cell}\mathbin{+}(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times\Conid{QTree}\;\Varid{a})))}
-    \ar[l]_-{\ensuremath{\Varid{amplia}}}
+  \ensuremath{\Conid{Cell}\;\Varid{a}\mathbin{+}(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times\Conid{QTree}\;\Varid{a})))}
+    \ar[l]_-{\ensuremath{\Varid{inverte}}}
 }
 \end{eqnarray*}
+
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -1633,6 +1650,258 @@ Se fosse um block em que a altura fosse superior a zero retornava o conteúdo do
 \>[B]{}\Varid{calculaAna}\mathbin{::}(\Varid{a},(\Conid{Int},\Conid{Int}))\to (\Varid{a},(\Conid{Int},\Conid{Int}))\to (\Varid{a},(\Conid{Int},\Conid{Int}))\to (\Varid{a},(\Conid{Int},\Conid{Int}))\to (\Varid{a},(\Conid{Int},\Conid{Int})){}\<[E]%
 \\
 \>[B]{}\Varid{calculaAna}\;(\Varid{a},(\Varid{b},\Varid{c}))\;(\anonymous ,(\Varid{d},\anonymous ))\;(\anonymous ,(\anonymous ,\Varid{e}))\;\anonymous \mathrel{=}(\Varid{a},(\Varid{b}\mathbin{+}\Varid{d},\Varid{c}\mathbin{+}\Varid{e})){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+\subsection*{outlineQTree}
+A função outlineQTree recebe uma função que testa quais os pixeis de fundo e converte numa matriz monocromática.
+Foi utilizado um catamorfismo que aplicava a todas as Cell a função, que era recebida como argumento.
+O gene do catamorfismo de outlineQTree é a função teste, que é basicamente um either.
+No caso de ser um pixel de fundo e é possível dividir a Cell, a função teste vai invocar funções auxiliares
+, que aumentam a profundiade da QTree, transformando 
+o Cell num BLock, para que o contorno deste possa ser diferente do interior.
+Caso não seja um pixel de fundo, este permanecia inalterado.
+
+\begin{eqnarray*}
+\xymatrix@C=3cm{
+  \ensuremath{\Conid{QTree}\;\Varid{a}}
+    \ar[r]_-{\ensuremath{\Varid{inQTree}}}
+    \ar[d]_-{\ensuremath{\Varid{outlineQTree}}}
+&
+  \ensuremath{\Conid{Cell}\;\Varid{a}\mathbin{+}(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times(\Conid{QTree}\;\Varid{a}\times\Conid{QTree}\;\Varid{a})))}
+    \ar[d]_-{\ensuremath{\Varid{id}\mathbin{+}(\Varid{outlineQTree}\times(\Varid{outlineQTree}\times(\Varid{outlineQTree}\times\Varid{outlineQTree})))}}
+    \ar[l]_-{\ensuremath{\Varid{outQTree}}}
+\\
+  \ensuremath{\Conid{QTree}\;\Conid{Bool}}
+&
+  \ensuremath{\Conid{Cell}\;\Varid{a}\mathbin{+}(\Conid{QTree}\;\Conid{Bool}\times(\Conid{QTree}\;\Conid{Bool}\times(\Conid{QTree}\;\Conid{Bool}\times\Conid{QTree}\;\Conid{Bool})))}
+    \ar[l]_-{\ensuremath{\Varid{teste}}}
+}
+\end{eqnarray*}
+
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{24}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{28}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{31}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{34}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{54}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{outlineQTree}\;\Varid{f}\;\Varid{q}\mathrel{=}\Varid{qt2bm}\;(\Varid{cataQTree}\;\Varid{teste}\;(\mathsf{fmap}\;\Varid{f}\;\Varid{q})){}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{teste}\mathbin{::}(\Conid{Bool},(\Conid{Int},\Conid{Int}))+(\Conid{QTree}\;\Conid{Bool},(\Conid{QTree}\;\Conid{Bool},(\Conid{QTree}\;\Conid{Bool},\Conid{QTree}\;\Conid{Bool})))\to \Conid{QTree}\;\Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{teste}\;(i_1\;(\Conid{False},(\Varid{x},\Varid{y})))\mathrel{=}\Conid{Cell}\;\Conid{False}\;\Varid{x}\;\Varid{y}{}\<[E]%
+\\
+\>[B]{}\Varid{teste}\;(i_1\;(\Conid{True},(\Varid{x},\Varid{y})))\mathrel{=}\mathbf{if}\;(\Varid{divideInicial}\;(\Varid{x},\Varid{y})){}\<[E]%
+\\
+\>[B]{}\hsindent{31}{}\<[31]%
+\>[31]{}\mathbf{then}\;\Conid{Block}\;(\Varid{criaTopoEsq}\;\mathrm{0}\;\Varid{nova})\;(\Varid{criaTopoDir}\;\mathrm{0}\;\Varid{nova})\;(\Varid{criaFundoEsq}\;\mathrm{0}\;\Varid{nova})\;(\Varid{criaFundoDir}\;\mathrm{0}\;\Varid{nova}){}\<[E]%
+\\
+\>[B]{}\hsindent{31}{}\<[31]%
+\>[31]{}\mathbf{else}\;\Conid{Cell}\;\Conid{True}\;\Varid{x}\;\Varid{y}{}\<[E]%
+\\
+\>[B]{}\hsindent{31}{}\<[31]%
+\>[31]{}\mathbf{where}\;\Varid{nova}\mathrel{=}\Conid{Cell}\;\Conid{True}\;\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\
+\>[B]{}\Varid{teste}\;(i_2\;(\Varid{a},(\Varid{b},(\Varid{c},\Varid{d}))))\mathrel{=}\Conid{Block}\;\Varid{a}\;\Varid{b}\;\Varid{c}\;\Varid{d}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{criaTopoEsq}\mathbin{::}\Conid{Int}\to \Conid{QTree}\;\Conid{Bool}\to \Conid{QTree}\;\Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{criaTopoEsq}\;\mathrm{0}\;(\Conid{Cell}\;\Varid{a}\;\Varid{x}\;\Varid{y})\mathrel{=}\mathbf{if}\;\Varid{divide}\;(\Varid{x},\Varid{y}){}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{then}\;\Conid{Block}\;(\Varid{criaTopoEsq}\;\mathrm{0}\;\Varid{nova})\;(\Varid{criaTopoDir}\;\mathrm{2}\;\Varid{nova})\;(\Varid{criaFundoEsq}\;\mathrm{1}\;\Varid{nova})\;\Varid{new}{}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{else}\;\Conid{Cell}\;\Varid{a}\;\Varid{x}\;\Varid{y}{}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{where}\;\Varid{nova}\mathrel{=}\Conid{Cell}\;\Varid{a}\;\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\
+\>[28]{}\hsindent{6}{}\<[34]%
+\>[34]{}\Varid{new}\mathrel{=}\Conid{Cell}\;(\neg \;\Varid{a})\;{}\<[54]%
+\>[54]{}\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\
+\>[B]{}\Varid{criaTopoEsq}\;\mathrm{1}\;(\Conid{Cell}\;\Varid{a}\;\Varid{x}\;\Varid{y})\mathrel{=}\mathbf{if}\;\Varid{divide}\;(\Varid{x},\Varid{y}){}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{then}\;\Conid{Block}\;(\Varid{criaTopoEsq}\;\mathrm{1}\;\Varid{nova})\;\Varid{new}\;(\Varid{criaFundoEsq}\;\mathrm{1}\;\Varid{nova})\;\Varid{new}{}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{else}\;\Conid{Cell}\;\Varid{a}\;\Varid{x}\;\Varid{y}{}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{where}\;\Varid{nova}\mathrel{=}\Conid{Cell}\;\Varid{a}\;\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\
+\>[28]{}\hsindent{6}{}\<[34]%
+\>[34]{}\Varid{new}\mathrel{=}\Conid{Cell}\;(\neg \;\Varid{a})\;{}\<[54]%
+\>[54]{}\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\
+\>[B]{}\Varid{criaTopoEsq}\;\mathrm{2}\;(\Conid{Cell}\;\Varid{a}\;\Varid{x}\;\Varid{y})\mathrel{=}\mathbf{if}\;\Varid{divide}\;(\Varid{x},\Varid{y}){}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{then}\;\Conid{Block}\;(\Varid{criaTopoEsq}\;\mathrm{2}\;\Varid{nova})\;(\Varid{criaTopoDir}\;\mathrm{2}\;\Varid{nova})\;\Varid{new}\;\Varid{new}{}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{else}\;\Conid{Cell}\;\Varid{a}\;\Varid{x}\;\Varid{y}{}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{where}\;\Varid{nova}\mathrel{=}\Conid{Cell}\;\Varid{a}\;\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\
+\>[28]{}\hsindent{6}{}\<[34]%
+\>[34]{}\Varid{new}\mathrel{=}\Conid{Cell}\;(\neg \;\Varid{a})\;{}\<[54]%
+\>[54]{}\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{criaTopoDir}\mathbin{::}\Conid{Int}\to {}\<[24]%
+\>[24]{}\Conid{QTree}\;\Conid{Bool}\to \Conid{QTree}\;\Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{criaTopoDir}\;\mathrm{0}\;(\Conid{Cell}\;\Varid{a}\;\Varid{x}\;\Varid{y})\mathrel{=}\mathbf{if}\;\Varid{divide}\;(\Varid{x},\Varid{y}){}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{then}\;\Conid{Block}\;(\Varid{criaTopoEsq}\;\mathrm{2}\;\Varid{nova})\;(\Varid{criaTopoDir}\;\mathrm{0}\;\Varid{nova})\;\Varid{new}\;(\Varid{criaFundoDir}\;\mathrm{1}\;\Varid{nova}){}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{else}\;\Conid{Cell}\;\Varid{a}\;\Varid{x}\;\Varid{y}{}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{where}\;\Varid{nova}\mathrel{=}\Conid{Cell}\;\Varid{a}\;\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\
+\>[28]{}\hsindent{6}{}\<[34]%
+\>[34]{}\Varid{new}\mathrel{=}\Conid{Cell}\;(\neg \;\Varid{a})\;{}\<[54]%
+\>[54]{}\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\
+\>[B]{}\Varid{criaTopoDir}\;\mathrm{1}\;(\Conid{Cell}\;\Varid{a}\;\Varid{x}\;\Varid{y})\mathrel{=}\mathbf{if}\;\Varid{divide}\;(\Varid{x},\Varid{y}){}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{then}\;\Conid{Block}\;\Varid{new}\;(\Varid{criaTopoDir}\;\mathrm{1}\;\Varid{nova})\;\Varid{new}\;(\Varid{criaFundoDir}\;\mathrm{1}\;\Varid{nova}){}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{else}\;\Conid{Cell}\;\Varid{a}\;\Varid{x}\;\Varid{y}{}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{where}\;\Varid{nova}\mathrel{=}\Conid{Cell}\;\Varid{a}\;\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\
+\>[28]{}\hsindent{6}{}\<[34]%
+\>[34]{}\Varid{new}\mathrel{=}\Conid{Cell}\;(\neg \;\Varid{a})\;{}\<[54]%
+\>[54]{}\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\
+\>[B]{}\Varid{criaTopoDir}\;\mathrm{2}\;(\Conid{Cell}\;\Varid{a}\;\Varid{x}\;\Varid{y})\mathrel{=}\mathbf{if}\;\Varid{divide}\;(\Varid{x},\Varid{y}){}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{then}\;\Conid{Block}\;(\Varid{criaTopoEsq}\;\mathrm{2}\;\Varid{nova})\;(\Varid{criaTopoDir}\;\mathrm{2}\;\Varid{nova})\;\Varid{new}\;\Varid{new}{}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{else}\;\Conid{Cell}\;\Varid{a}\;\Varid{x}\;\Varid{y}{}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{where}\;\Varid{nova}\mathrel{=}\Conid{Cell}\;\Varid{a}\;\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\
+\>[28]{}\hsindent{6}{}\<[34]%
+\>[34]{}\Varid{new}\mathrel{=}\Conid{Cell}\;(\neg \;\Varid{a})\;{}\<[54]%
+\>[54]{}\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{criaFundoEsq}\mathbin{::}\Conid{Int}\to \Conid{QTree}\;\Conid{Bool}\to \Conid{QTree}\;\Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{criaFundoEsq}\;\mathrm{0}\;(\Conid{Cell}\;\Varid{a}\;\Varid{x}\;\Varid{y})\mathrel{=}\mathbf{if}\;\Varid{divide}\;(\Varid{x},\Varid{y}){}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{then}\;\Conid{Block}\;(\Varid{criaTopoEsq}\;\mathrm{1}\;\Varid{nova})\;\Varid{new}\;(\Varid{criaFundoEsq}\;\mathrm{0}\;\Varid{nova})\;(\Varid{criaFundoDir}\;\mathrm{2}\;\Varid{nova}){}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{else}\;\Conid{Cell}\;\Varid{a}\;\Varid{x}\;\Varid{y}{}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{where}\;\Varid{nova}\mathrel{=}\Conid{Cell}\;\Varid{a}\;\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\
+\>[28]{}\hsindent{6}{}\<[34]%
+\>[34]{}\Varid{new}\mathrel{=}\Conid{Cell}\;(\neg \;\Varid{a})\;{}\<[54]%
+\>[54]{}\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\
+\>[B]{}\Varid{criaFundoEsq}\;\mathrm{1}\;(\Conid{Cell}\;\Varid{a}\;\Varid{x}\;\Varid{y})\mathrel{=}\mathbf{if}\;\Varid{divide}\;(\Varid{x},\Varid{y}){}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{then}\;\Conid{Block}\;(\Varid{criaTopoEsq}\;\mathrm{1}\;\Varid{nova})\;\Varid{new}\;(\Varid{criaFundoEsq}\;\mathrm{1}\;\Varid{nova})\;\Varid{new}{}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{else}\;\Conid{Cell}\;\Varid{a}\;\Varid{x}\;\Varid{y}{}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{where}\;\Varid{nova}\mathrel{=}\Conid{Cell}\;\Varid{a}\;\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\
+\>[28]{}\hsindent{6}{}\<[34]%
+\>[34]{}\Varid{new}\mathrel{=}\Conid{Cell}\;(\neg \;\Varid{a})\;{}\<[54]%
+\>[54]{}\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\
+\>[B]{}\Varid{criaFundoEsq}\;\mathrm{2}\;(\Conid{Cell}\;\Varid{a}\;\Varid{x}\;\Varid{y})\mathrel{=}\mathbf{if}\;\Varid{divide}\;(\Varid{x},\Varid{y}){}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{then}\;\Conid{Block}\;\Varid{new}\;\Varid{new}\;(\Varid{criaFundoEsq}\;\mathrm{2}\;\Varid{nova})\;(\Varid{criaFundoDir}\;\mathrm{2}\;\Varid{nova}){}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{else}\;\Conid{Cell}\;\Varid{a}\;\Varid{x}\;\Varid{y}{}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{where}\;\Varid{nova}\mathrel{=}\Conid{Cell}\;\Varid{a}\;\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\
+\>[28]{}\hsindent{6}{}\<[34]%
+\>[34]{}\Varid{new}\mathrel{=}\Conid{Cell}\;(\neg \;\Varid{a})\;{}\<[54]%
+\>[54]{}\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{criaFundoDir}\mathbin{::}\Conid{Int}\to \Conid{QTree}\;\Conid{Bool}\to \Conid{QTree}\;\Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{criaFundoDir}\;\mathrm{0}\;(\Conid{Cell}\;\Varid{a}\;\Varid{x}\;\Varid{y})\mathrel{=}\mathbf{if}\;\Varid{divide}\;(\Varid{x},\Varid{y}){}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{then}\;\Conid{Block}\;\Varid{new}\;(\Varid{criaTopoDir}\;\mathrm{1}\;\Varid{nova})\;(\Varid{criaFundoEsq}\;\mathrm{2}\;\Varid{nova})\;(\Varid{criaFundoDir}\;\mathrm{0}\;\Varid{nova}){}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{else}\;\Conid{Cell}\;\Varid{a}\;\Varid{x}\;\Varid{y}{}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{where}\;\Varid{nova}\mathrel{=}\Conid{Cell}\;\Varid{a}\;\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\
+\>[28]{}\hsindent{6}{}\<[34]%
+\>[34]{}\Varid{new}\mathrel{=}\Conid{Cell}\;(\neg \;\Varid{a})\;{}\<[54]%
+\>[54]{}\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\
+\>[B]{}\Varid{criaFundoDir}\;\mathrm{1}\;(\Conid{Cell}\;\Varid{a}\;\Varid{x}\;\Varid{y})\mathrel{=}\mathbf{if}\;\Varid{divide}\;(\Varid{x},\Varid{y}){}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{then}\;\Conid{Block}\;\Varid{new}\;(\Varid{criaTopoDir}\;\mathrm{1}\;\Varid{nova})\;\Varid{new}\;(\Varid{criaFundoDir}\;\mathrm{1}\;\Varid{nova}){}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{else}\;\Conid{Cell}\;\Varid{a}\;\Varid{x}\;\Varid{y}{}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{where}\;\Varid{nova}\mathrel{=}\Conid{Cell}\;\Varid{a}\;\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\
+\>[28]{}\hsindent{6}{}\<[34]%
+\>[34]{}\Varid{new}\mathrel{=}\Conid{Cell}\;(\neg \;\Varid{a})\;{}\<[54]%
+\>[54]{}\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\
+\>[B]{}\Varid{criaFundoDir}\;\mathrm{2}\;(\Conid{Cell}\;\Varid{a}\;\Varid{x}\;\Varid{y})\mathrel{=}\mathbf{if}\;\Varid{divide}\;(\Varid{x},\Varid{y}){}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{then}\;\Conid{Block}\;\Varid{new}\;\Varid{new}\;(\Varid{criaFundoEsq}\;\mathrm{2}\;\Varid{nova})\;(\Varid{criaFundoDir}\;\mathrm{2}\;\Varid{nova}){}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{else}\;\Conid{Cell}\;\Varid{a}\;\Varid{x}\;\Varid{y}{}\<[E]%
+\\
+\>[B]{}\hsindent{28}{}\<[28]%
+\>[28]{}\mathbf{where}\;\Varid{nova}\mathrel{=}\Conid{Cell}\;\Varid{a}\;\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\
+\>[28]{}\hsindent{6}{}\<[34]%
+\>[34]{}\Varid{new}\mathrel{=}\Conid{Cell}\;(\neg \;\Varid{a})\;{}\<[54]%
+\>[54]{}\Varid{x}\div \mathrm{2}\;\Varid{y}\div \mathrm{2}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{divide}\mathbin{::}(\Conid{Int},\Conid{Int})\to \Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{divide}\;(\Varid{x},\Varid{y})\mathrel{=}\Varid{x}\geq \mathrm{2}\mathrel{\wedge}\Varid{y}\geq \mathrm{2}\mathrel{\wedge}\Varid{mod}\;\Varid{x}\;\mathrm{2}\equiv \mathrm{0}\mathrel{\wedge}\Varid{mod}\;\Varid{y}\;\mathrm{2}\equiv \mathrm{0}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{divideInicial}\mathbin{::}(\Conid{Int},\Conid{Int})\to \Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{divideInicial}\;(\Varid{x},\Varid{y})\mathrel{=}\Varid{x}\geq \mathrm{4}\mathrel{\wedge}\Varid{y}\geq \mathrm{4}\mathrel{\wedge}\Varid{mod}\;\Varid{x}\;\mathrm{2}\equiv \mathrm{0}\mathrel{\wedge}\Varid{mod}\;\Varid{y}\;\mathrm{2}\equiv \mathrm{0}{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
 
@@ -1845,6 +2114,14 @@ Por fim, é aplicada a função B que soma os elementos do mesmo tipo e transfor
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
 \>[B]{}\mu \mathrel{=}\mathit B{}\<[10]%
 \>[10]{}\comp \Varid{bagValor}\comp (\mathsf{fmap}\;\Varid{unB}){}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{bagValor}\mathbin{::}\Conid{Bag}\;[\mskip1.5mu (\Varid{a},\Conid{Int})\mskip1.5mu]\to [\mskip1.5mu (\Varid{a},\Conid{Int})\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\Varid{bagValor}\mathrel{=}\Varid{concat}\comp (\map \;\Varid{novoValor})\comp \Varid{unB}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{novoValor}\mathbin{::}([\mskip1.5mu (\Varid{a},\Conid{Int})\mskip1.5mu],\Conid{Int})\to [\mskip1.5mu (\Varid{a},\Conid{Int})\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\Varid{novoValor}\;(\Varid{x},\Varid{y})\mathrel{=}\map \;(\Varid{id}\times(\mathbin{*}\Varid{y}))\;\Varid{x}{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
 
@@ -1889,20 +2166,6 @@ Esta função transforma uma lista de tuplos, (a, Int), numa lista de (a, ProbRe
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
 \>[B]{}\Varid{dist}\;\Varid{b}\mathrel{=}\Varid{prob}\;\Varid{b}\;(\Varid{nBags}\;\Varid{b}){}\<[E]%
-\ColumnHook
-\end{hscode}\resethooks
-
-\subsubsection{Auxiliares}
-\begin{hscode}\SaveRestoreHook
-\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\Varid{bagValor}\mathbin{::}\Conid{Bag}\;[\mskip1.5mu (\Varid{a},\Conid{Int})\mskip1.5mu]\to [\mskip1.5mu (\Varid{a},\Conid{Int})\mskip1.5mu]{}\<[E]%
-\\
-\>[B]{}\Varid{bagValor}\mathrel{=}\Varid{concat}\comp (\map \;\Varid{novoValor})\comp \Varid{unB}{}\<[E]%
-\\[\blanklineskip]%
-\>[B]{}\Varid{novoValor}\mathbin{::}([\mskip1.5mu (\Varid{a},\Conid{Int})\mskip1.5mu],\Conid{Int})\to [\mskip1.5mu (\Varid{a},\Conid{Int})\mskip1.5mu]{}\<[E]%
-\\
-\>[B]{}\Varid{novoValor}\;(\Varid{x},\Varid{y})\mathrel{=}\map \;(\Varid{id}\times(\mathbin{*}\Varid{y}))\;\Varid{x}{}\<[E]%
 \\[\blanklineskip]%
 \>[B]{}\Varid{prob}\mathbin{::}\Conid{Bag}\;\Varid{a}\to \Conid{Int}\to \fun{Dist}\;\Varid{a}{}\<[E]%
 \\
