@@ -109,7 +109,7 @@
 \\\hline
 a81960 & Luís Filipe da Costa Capa
 \\
-a82263 & Moisés Antunes
+a82263 & Moisés Araújo Antunes
 \\
 a83170 & Pedro Miguel da Costa Capa
 \end{tabular}
